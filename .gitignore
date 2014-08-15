@@ -1,0 +1,13 @@
+pkg
+spec/reports
+.vimrc
+*.sw?
+.idea/
+config/database.yml
+db
+.tddium*
+.DS_Store
+.jhw-cache
+**.orig
+.rspec
+.bundle

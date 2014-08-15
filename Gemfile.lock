@@ -1,0 +1,60 @@
+PATH
+  remote: .
+  specs:
+    Pwwka (0.0.1)
+      activemodel
+      activesupport
+      bunny
+      mono_logger
+      sucker_punch
+
+GEM
+  remote: https://www.rubygems.org/
+  specs:
+    activemodel (4.1.4)
+      activesupport (= 4.1.4)
+      builder (~> 3.1)
+    activesupport (4.1.4)
+      i18n (~> 0.6, >= 0.6.9)
+      json (~> 1.7, >= 1.7.7)
+      minitest (~> 5.1)
+      thread_safe (~> 0.1)
+      tzinfo (~> 1.1)
+    amq-protocol (1.9.2)
+    builder (3.2.2)
+    bunny (1.4.0)
+      amq-protocol (>= 1.9.2)
+    celluloid (0.15.2)
+      timers (~> 1.1.0)
+    diff-lcs (1.2.5)
+    i18n (0.6.11)
+    json (1.8.1)
+    minitest (5.4.0)
+    mono_logger (1.1.0)
+    rake (10.3.2)
+    rspec (3.0.0)
+      rspec-core (~> 3.0.0)
+      rspec-expectations (~> 3.0.0)
+      rspec-mocks (~> 3.0.0)
+    rspec-core (3.0.4)
+      rspec-support (~> 3.0.0)
+    rspec-expectations (3.0.4)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.0.0)
+    rspec-mocks (3.0.4)
+      rspec-support (~> 3.0.0)
+    rspec-support (3.0.4)
+    sucker_punch (1.1)
+      celluloid (~> 0.15.2)
+    thread_safe (0.3.4)
+    timers (1.1.0)
+    tzinfo (1.2.2)
+      thread_safe (~> 0.1)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  Pwwka!
+  rake
+  rspec
