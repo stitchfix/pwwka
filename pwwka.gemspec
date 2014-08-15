@@ -3,7 +3,7 @@ $:.push File.expand_path("../lib", __FILE__)
 require 'pwwka/version'
 
 Gem::Specification.new do |s|
-  s.name        = "Pwwka"
+  s.name        = "pwwka"
   s.version     = Pwwka::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = ['Stitch Fix Engineering']
@@ -13,7 +13,6 @@ Gem::Specification.new do |s|
   s.description = "The purpose of this gem is to normalise the sending and
   receiving of messages between Rails apps using the shared RabbitMQ
   message bus"
-  s.rubyforge_project = "pwwka"
 
   s.files         = `git ls-files`.split("\n")
   s.test_files    = `git ls-files -- {test,spec,features}/*`.split("\n")

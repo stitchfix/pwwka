@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    Pwwka (0.0.1)
+    pwwka (0.0.1)
       activemodel
       activesupport
       bunny
@@ -55,6 +55,6 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  Pwwka!
+  pwwka!
   rake
   rspec
