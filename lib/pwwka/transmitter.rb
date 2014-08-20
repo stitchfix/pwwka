@@ -2,26 +2,24 @@ module Pwwka
   class Transmitter
 
     extend Pwwka::Logging
-    include SuckerPunch::Job
+    include Pwwka::Logging
 
     def self.send_message!(payload, routing_key)
-      new.async.send_message!(payload, routing_key)
-      info "BACKGROUND AFTER Transmitting Message on #{routing_key} -> #{payload}"
+      new.send_message!(payload, routing_key)
+      info "AFTER Transmitting Message on #{routing_key} -> #{payload}"
     end
 
     def self.send_message_safely(payload, routing_key)
       begin
         send_message!(payload, routing_key)
       rescue => e
-        error "Error Transmitting Message on #{routing_key} -> #{payload}: #{e}"
-        return false
+        error "ERROR Transmitting Message on #{routing_key} -> #{payload}: #{e}"
+        false
       end  
     end
 
-    # send message asynchronously using sucker_punch
-    # call async.send_message!
     def send_message!(payload, routing_key)
-      self.class.info "BACKGROUND START Transmitting Message on #{routing_key} -> #{payload}"
+      info "START Transmitting Message on #{routing_key} -> #{payload}"
       channel_connector = ChannelConnector.new 
       channel_connector.topic_exchange.publish(
         payload.to_json,
@@ -29,10 +27,8 @@ module Pwwka
         persistent: true)
       channel_connector.connection_close
       # if it gets this far it has succeeded
-      self.class.info "BACKGROUND END Transmitting Message on #{routing_key} -> #{payload}"
-      return true
+      info "END Transmitting Message on #{routing_key} -> #{payload}"
+      true
     end
-
   end
-
 end

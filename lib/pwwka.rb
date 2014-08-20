@@ -17,7 +17,6 @@ module Pwwka
 end
 
 require 'json'
-require 'sucker_punch'
 require 'active_support/inflector'
 require 'active_support/core_ext/module'
 require 'active_support/hash_with_indifferent_access'

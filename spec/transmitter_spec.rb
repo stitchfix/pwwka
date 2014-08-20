@@ -15,7 +15,7 @@ describe Pwwka::Transmitter do
   describe "#send_message!" do
 
     it "should send the correct payload" do
-      success = Pwwka::Transmitter.new.async.send_message!(payload, routing_key)
+      success = Pwwka::Transmitter.new.send_message!(payload, routing_key)
       expect(success).to be_truthy
       received_payload = @test_handler.get_topic_message_payload_for_tests
       expect(received_payload["this"]).to eq("that")
@@ -24,7 +24,7 @@ describe Pwwka::Transmitter do
     it "should blow up if exception raised" do
       expect(Pwwka::ChannelConnector).to receive(:new).and_raise("blow up")
       expect {
-        Pwwka::Transmitter.new.async.send_message!(payload, routing_key)
+        Pwwka::Transmitter.new.send_message!(payload, routing_key)
       }.to raise_error
     end
 
@@ -36,11 +36,6 @@ describe Pwwka::Transmitter do
       Pwwka::Transmitter.send_message!(payload, routing_key)
       received_payload = @test_handler.get_topic_message_payload_for_tests
       expect(received_payload["this"]).to eq("that")
-    end
-
-    it "should use sucker_punch to send the message in the background" do
-      expect_any_instance_of(Pwwka::Transmitter).to receive(:send_message!).with(payload, routing_key).and_return(true)
-      Pwwka::Transmitter.send_message!(payload, routing_key)
     end
 
     it "should blow up if exception raised" do
