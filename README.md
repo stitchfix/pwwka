@@ -49,7 +49,7 @@ And follow the instructions.
 Add to your `Gemfile`:
 
 ```ruby
-gem 'pwwka', require: false, git: 'https://github.com/stitchfix/pwwka.git'
+gem 'pwwka', require: false
 ```
 
 
