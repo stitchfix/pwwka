@@ -11,4 +11,5 @@ To contribute,
 
 ## Testing
 <a name="testing"></a>
-The pwwka gem has tests for all its functionality so app testing is best done with expectations. However, if you want to test the message bus end-to-end in your app you can use some helpers in `lib/pwwka//pwwka/test_handler.rb`. See the gem specs for examples of how to use them.
+
+You must be running RabbitMQ locally on the default port in order for the tests to work.
