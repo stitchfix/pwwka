@@ -204,3 +204,8 @@ To contribute,
 * forking
 * resending
 * handling messages from inside transactions properly
+
+## Licence
+
+Pwwka is released under the [MIT License](http://www.opensource.org/licenses/MIT).
+
