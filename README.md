@@ -1,3 +1,13 @@
+# Pwwka
+
+
+Pronounced "Poo-ka" |ˈpo͞okə|
+
+[PLACEHOLDER FOR IMG]
+
+---
+
+
 This gem connects to a topic exchange on a RabbitMQ server. It gives any app using it the ability to do two things:
 
 * Transmit messages to the exchange
