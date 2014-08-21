@@ -23,6 +23,8 @@ Gem::Specification.new do |s|
   s.add_dependency("activemodel")
   s.add_dependency("sucker_punch")
   s.add_dependency("mono_logger")
+  s.add_dependency("redis")
   s.add_development_dependency("rake")
   s.add_development_dependency("rspec")
+  s.add_development_dependency("fakeredis")
 end
