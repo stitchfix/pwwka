@@ -17,6 +17,7 @@ module Pwwka
 end
 
 require 'json'
+require 'redis'
 require 'sucker_punch'
 require 'active_support/inflector'
 require 'active_support/core_ext/module'
@@ -27,6 +28,8 @@ require 'pwwka/logging'
 require 'pwwka/channel_connector'
 require 'pwwka/handling'
 require 'pwwka/receiver'
+require 'pwwka/redis_logger'
+require 'pwwka/retry'
 require 'pwwka/transmitter'
 
 require 'pwwka/configuration'

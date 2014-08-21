@@ -6,6 +6,7 @@ PATH
       activesupport
       bunny
       mono_logger
+      redis
       sucker_punch
 
 GEM
@@ -27,11 +28,14 @@ GEM
     celluloid (0.15.2)
       timers (~> 1.1.0)
     diff-lcs (1.2.5)
+    fakeredis (0.4.3)
+      redis (~> 3.0.0)
     i18n (0.6.11)
     json (1.8.1)
     minitest (5.4.0)
     mono_logger (1.1.0)
     rake (10.3.2)
+    redis (3.0.7)
     rspec (3.0.0)
       rspec-core (~> 3.0.0)
       rspec-expectations (~> 3.0.0)
@@ -55,6 +59,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  fakeredis
   pwwka!
   rake
   rspec
