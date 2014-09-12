@@ -109,7 +109,7 @@ message_handler: rake message_handler:receive HANDLER_KLASS=ClientIndexMessageHa
 You'll also need to bring the Rake task into your app.  For Rails, you'll need to edit the top-level `Rakefile`:
 
 ```ruby
-require 'stitch_fix/message_handler/tasks'
+require 'pwwka/tasks'
 ```
 
 ### Queues - what messages will your queue receive
