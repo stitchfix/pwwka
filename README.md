@@ -43,7 +43,7 @@ gem 'pwwka'
 ```
 
 
-### Set up your message_handler configration
+### Set up your pwwka configration
 
 Connect to your RabbitMQ instance using the url and choose a name for your
 topic exchange.
@@ -177,7 +177,7 @@ RabbitMQ has a web interface for checking out the health of connections, channel
 ![RabbitMQ Management 3](docs/images/RabbitMQ_Management-3.png)
 
 ## Testing
-The message_handler gem has tests for all its functionality so app testing is best done with expectations. However, if you want to test the message bus end-to-end in your app you can use some helpers in `lib/stitch_fix/message_handler/test_handler.rb`. See the gem specs for examples of how to use them.
+The pwwka gem has tests for all its functionality so app testing is best done with expectations. However, if you want to test the message bus end-to-end in your app you can use some helpers in `lib/pwwka/test_handler.rb`. See the gem specs for examples of how to use them.
 
 ## TODO
 * automated monitoring
