@@ -13,6 +13,11 @@ module Pwwka
     extend Pwwka::Logging
     include Pwwka::Logging
 
+    attr_reader :channel_connector
+    def initialize
+      @channel_connector = ChannelConnector.new 
+    end
+
     # Send an important message that must go through.  This method allows any raised exception 
     # to pass through.
     #
@@ -43,7 +48,6 @@ module Pwwka
 
     def send_message!(payload, routing_key)
       info "START Transmitting Message on #{routing_key} -> #{payload}"
-      channel_connector = ChannelConnector.new 
       channel_connector.topic_exchange.publish(
         payload.to_json,
         routing_key: routing_key,
@@ -53,5 +57,32 @@ module Pwwka
       info "END Transmitting Message on #{routing_key} -> #{payload}"
       true
     end
+
+    def send_delayed_message!(payload, routing_key, delay_by = 5000)
+      info "START Transmitting Delayed Message on #{routing_key} -> #{payload}"
+      delayed_queue
+      channel_connector.delayed_exchange.publish(
+        payload.to_json,
+        routing_key: routing_key,
+        expiration: delay_by,
+        persistent: true)
+      channel_connector.connection_close
+      # if it gets this far it has succeeded
+      info "END Transmitting Delayed Message on #{routing_key} -> #{payload}"
+      true
+    end
+
+    private
+    def delayed_queue
+      @delayed_queue ||= begin
+        queue = channel_connector.channel.queue( "pwwka_delayed_#{Pwwka.environment}", durable: true,
+          arguments: {
+            'x-dead-letter-exchange' => channel_connector.configuration.topic_exchange_name,
+        })
+        queue.bind(channel_connector.delayed_exchange)
+        queue
+      end 
+    end
+
   end
 end
