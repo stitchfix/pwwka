@@ -10,13 +10,9 @@ module Pwwka
   class TestHandler
 
     attr_reader :channel_connector
-    attr_reader :channel
-    attr_reader :topic_exchange
 
     def initialize
       @channel_connector = ChannelConnector.new
-      @channel           = channel_connector.channel
-      @topic_exchange    = channel_connector.topic_exchange
     end
 
     # call this method to create the queue used for testing
@@ -28,8 +24,8 @@ module Pwwka
 
     def test_queue
       @test_queue  ||= begin
-                         test_queue  = channel.queue("test-queue", durable: true)
-                         test_queue.bind(topic_exchange, routing_key: "#.#")
+                         test_queue  = channel_connector.channel.queue("test-queue", durable: true)
+                         test_queue.bind(channel_connector.topic_exchange, routing_key: "#.#")
                          test_queue
                        end
     end
@@ -66,7 +62,11 @@ module Pwwka
 
     def test_teardown
       test_queue.delete
-      topic_exchange.delete
+      channel_connector.topic_exchange.delete
+      # delayed messages
+      channel_connector.delayed_queue.delete
+      channel_connector.delayed_exchange.delete
+
       channel_connector.connection_close 
     end
 

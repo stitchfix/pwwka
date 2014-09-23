@@ -22,7 +22,25 @@ module Pwwka
     end
 
     def delayed_exchange
+      raise_if_delayed_not_allowed
       @delayed_exchange ||= channel.fanout(configuration.delayed_exchange_name, durable: true)
+    end
+
+    def delayed_queue
+      raise_if_delayed_not_allowed
+      @delayed_queue ||= begin
+        queue = channel.queue("pwwka_delayed_#{Pwwka.environment}", durable: true,
+          arguments: {
+            'x-dead-letter-exchange' => configuration.topic_exchange_name,
+        })
+        queue.bind(delayed_exchange)
+        queue
+      end 
+    end
+    alias :create_delayed_queue :delayed_queue
+
+    def raise_if_delayed_not_allowed
+      raise ConfigurationError unless configuration.allow_delayed?
     end
 
     def connection_close
