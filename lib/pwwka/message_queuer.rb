@@ -29,7 +29,7 @@ module Pwwka
     end
 
     def queue_message(payload:, routing_key:)
-      self.class.new(message_queue.push([payload, routing_key]))
+      message_queue.push([payload, routing_key])
     end
 
     def send_messages_safely
@@ -48,7 +48,6 @@ module Pwwka
 
     def clear_messages
       @message_queue.clear
-      self.class.new
     end
 
   end
