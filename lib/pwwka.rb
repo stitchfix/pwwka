@@ -27,5 +27,6 @@ require 'pwwka/channel_connector'
 require 'pwwka/handling'
 require 'pwwka/receiver'
 require 'pwwka/transmitter'
+require 'pwwka/message_queuer'
 
 require 'pwwka/configuration'
