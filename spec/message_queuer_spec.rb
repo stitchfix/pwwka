@@ -4,8 +4,10 @@ describe Pwwka::MessageQueuer do
 
   let(:message_queuer)  { Pwwka::MessageQueuer.new }
   let(:message_queuer_with_messages) {
-    Pwwka::MessageQueuer.new.queue_message(payload: payload1, routing_key: routing_key1)
-      .queue_message(payload: payload2, routing_key: routing_key2)
+    message_queuer  = Pwwka::MessageQueuer.new
+    message_queuer.queue_message(payload: payload1, routing_key: routing_key1)
+    message_queuer.queue_message(payload: payload2, routing_key: routing_key2)
+    message_queuer
   }
   let(:payload1)        { {this: 'that'} }
   let(:routing_key1)    { "thing.7.happened" }
@@ -16,10 +18,9 @@ describe Pwwka::MessageQueuer do
 
     it "should add a message to the queue" do
       expect(message_queuer.message_queue).to eq([])
-      expect(
-        message_queuer.queue_message(payload: payload1, routing_key: routing_key1)
-          .queue_message(payload: payload2, routing_key: routing_key2).message_queue
-      ).to eq([[payload1, routing_key1], [payload2, routing_key2]])
+      message_queuer.queue_message(payload: payload1, routing_key: routing_key1)
+      message_queuer.queue_message(payload: payload2, routing_key: routing_key2)
+      expect(message_queuer.message_queue).to eq([[payload1, routing_key1], [payload2, routing_key2]])
     end
 
   end
