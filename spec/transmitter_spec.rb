@@ -10,15 +10,24 @@ describe Pwwka::Transmitter do
   after(:all) { @test_handler.test_teardown }
 
   let(:payload)     { Hash[:this, "that"] }
-  let(:routing_key) { "this.that" }
+  let(:routing_key) { "this.that.and.theother" }
 
   describe "#send_message!" do
 
-    it "should send the correct payload" do
-      success = Pwwka::Transmitter.new.send_message!(payload, routing_key)
-      expect(success).to be_truthy
-      received_payload = @test_handler.get_topic_message_payload_for_tests
-      expect(received_payload["this"]).to eq("that")
+    context "happy path" do
+      it "should send the correct payload" do
+        success = Pwwka::Transmitter.new.send_message!(payload, routing_key)
+        expect(success).to be_truthy
+        received_payload = @test_handler.pop_message.payload
+        expect(received_payload["this"]).to eq("that")
+      end
+
+      it "should delivery on the expected routing key" do
+        success = Pwwka::Transmitter.new.send_message!(payload, routing_key)
+        expect(success).to be_truthy
+        delivery_info = @test_handler.pop_message.delivery_info
+        expect(delivery_info.routing_key).to eq(routing_key)
+      end
     end
 
     it "should blow up if exception raised" do
@@ -34,7 +43,7 @@ describe Pwwka::Transmitter do
 
     it "should send the correct payload" do
       Pwwka::Transmitter.send_message!(payload, routing_key)
-      received_payload = @test_handler.get_topic_message_payload_for_tests
+      received_payload = @test_handler.pop_message.payload
       expect(received_payload["this"]).to eq("that")
     end
 
@@ -51,7 +60,7 @@ describe Pwwka::Transmitter do
 
     it "should send the correct payload" do
       Pwwka::Transmitter.send_message_safely(payload, routing_key)
-      received_payload = @test_handler.get_topic_message_payload_for_tests
+      received_payload = @test_handler.pop_message.payload
       expect(received_payload["this"]).to eq("that")
     end
 

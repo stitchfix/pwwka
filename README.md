@@ -177,7 +177,47 @@ RabbitMQ has a web interface for checking out the health of connections, channel
 ![RabbitMQ Management 3](docs/images/RabbitMQ_Management-3.png)
 
 ## Testing
-The pwwka gem has tests for all its functionality so app testing is best done with expectations. However, if you want to test the message bus end-to-end in your app you can use some helpers in `lib/pwwka/test_handler.rb`. See the gem specs for examples of how to use them.
+
+This gem has test coverage of interacting with RabbitMQ, so for unit tests, your best
+strategy is to simply mock calls to `Pwwka::Transmitter`.
+
+For integration tests, however, you can examine the actual message bus by setting up
+the provided `Pwwka::TestHandler` like so:
+
+```ruby
+require 'pwwka/test_handler'
+
+describe "my integration test" do
+
+  before(:all) do
+    @test_handler = Pwwka::TestHandler.new
+    @test_handler.test_setup
+  end
+
+  after(:all) do 
+    # this clears out any messages, so you have a clean test environment next time
+    @test_handler.test_teardown 
+  end
+
+  it "uses the message bus" do
+    post "/items", item: { size: "L" }
+
+    message = @test_handler.pop_message
+
+    expect(message.delivery_info.routing_key).to eq("my-company.items.created")
+    expect(message.payload).to eq({ item: { id: 42, size: "L" } })
+  end
+
+  it "can splat the values as well" do
+    post "/items", item: { size: "L" }
+
+    delivery_info, payload = @test_handler.pop_message
+
+    expect(delivery_info.routing_key).to eq("my-company.items.created")
+    expect(payload).to eq({ item: { id: 42, size: "L" } })
+  end
+end
+```
 
 ## TODO
 * automated monitoring
