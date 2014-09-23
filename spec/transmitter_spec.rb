@@ -7,6 +7,7 @@ describe Pwwka::Transmitter do
     @test_handler.test_setup
   end
 
+  after(:each) { @test_handler.purge_test_queue }
   after(:all) { @test_handler.test_teardown }
 
   let(:payload)     { Hash[:this, "that"] }
@@ -70,7 +71,7 @@ describe Pwwka::Transmitter do
 
     context "delayed not configured" do
       it "should blow up if allow_delayed? is false" do
-        expect(@test_handler.channel_connector.configuration).to receive(:allow_delayed?).and_return(false)
+        expect(@test_handler.channel_connector.configuration).to receive(:allow_delayed?).at_least(:once).and_return(false)
         expect {
           Pwwka::Transmitter.new.send_delayed_message!(payload, routing_key, 1)
         }.to raise_error(Pwwka::ConfigurationError)
