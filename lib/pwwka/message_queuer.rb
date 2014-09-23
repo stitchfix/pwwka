@@ -48,7 +48,6 @@ module Pwwka
 
     def clear_messages
       @message_queue.clear
-      self.class.new
     end
 
   end

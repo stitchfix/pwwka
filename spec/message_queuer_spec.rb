@@ -32,7 +32,8 @@ describe Pwwka::MessageQueuer do
       expect(message_queuer_with_messages.message_queue).to eq([[payload1, routing_key1], [payload2, routing_key2]])
       expect(message_queuer_with_messages).to receive(:send_message_safely).with(payload1, routing_key1).and_call_original
       expect(message_queuer_with_messages).to receive(:send_message_safely).with(payload2, routing_key2).and_call_original
-      expect(message_queuer_with_messages.send_messages_safely.message_queue).to eq([])
+      message_queuer_with_messages.send_messages_safely
+      expect(message_queuer_with_messages.message_queue).to eq([])
     end
 
   end
@@ -43,7 +44,8 @@ describe Pwwka::MessageQueuer do
       expect(message_queuer_with_messages.message_queue).to eq([[payload1, routing_key1], [payload2, routing_key2]])
       expect(message_queuer_with_messages).to receive(:send_message!).with(payload1, routing_key1).and_call_original
       expect(message_queuer_with_messages).to receive(:send_message!).with(payload2, routing_key2).and_call_original
-      expect(message_queuer_with_messages.send_messages!.message_queue).to eq([])
+      message_queuer_with_messages.send_messages!
+      expect(message_queuer_with_messages.message_queue).to eq([])
     end
 
   end
@@ -52,7 +54,8 @@ describe Pwwka::MessageQueuer do
 
     it "should clear the queued messages" do
       expect(message_queuer_with_messages.message_queue).to eq([[payload1, routing_key1], [payload2, routing_key2]])
-      expect(message_queuer_with_messages.clear_messages.message_queue).to eq([])
+      message_queuer_with_messages.clear_messages
+      expect(message_queuer_with_messages.message_queue).to eq([])
     end
 
   end
