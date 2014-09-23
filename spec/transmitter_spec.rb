@@ -47,7 +47,7 @@ describe Pwwka::Transmitter do
         success = Pwwka::Transmitter.new.send_delayed_message!(payload, routing_key, 1000)
         expect(success).to be_truthy
         expect(@test_handler.test_queue.message_count).to eq(0)
-        sleep 10
+        sleep 5
         expect(@test_handler.test_queue.message_count).to eq(1)
         received_payload = @test_handler.pop_message.payload
         expect(received_payload["this"]).to eq("that")
