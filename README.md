@@ -55,6 +55,7 @@ require 'pwwka'
 Pwwka.configure do |config|
   config.rabbit_mq_host      = ENV['RABBITMQ_URL']
   config.topic_exchange_name = "mycompany-topics-#{Rails.env}"
+  config.options             = {allow_delayed: true}
 end
 ```
 
@@ -93,6 +94,37 @@ send_message_safely(payload, routing_key)
 
 The messages are not transaction safe so for updates do your best to send them after the transaction commits. You must send create messages after the transaction commits or the receivers will probably not find the persisted records.
 
+### Delayed Messages
+You might want to delay sending a message (for example, if you have just created a database record and a race condition keeps catching you out). In that case you can use delayed message options:
+
+```ruby
+payload = {client_id: '13452564'}
+routing_key	= 'sf.clients.client.created'
+Pwwka::Transmitter.send_message!(payload, routing_key, delayed: true, delay_by: 3000)
+```
+
+`delay_by` is an integer of milliseconds to delay the message. The default (if no value is set) is 5000 (5 seconds).
+
+These extra arguments work for all message sending methods - the safe ones, the handling, and the message_queuer methods (see below).
+
+### Message Queuer
+You can queue up messages and send them in a batch. This is most useful when multiple messages need to sent from within a transaction block.
+  
+For example:
+
+```ruby
+# instantiate a message_queuer object
+message_queuer  = MessageQueuerService.new
+ActiveRecord::Base.transaction do
+  # do a thing, then queue message
+  message_queuer.queue_message(payload: {this: 'that'}, routing_key: 'go.to.there')
+
+  # do another thing, then queue a delayed message
+  message_queuer.queue_message(payload: {the: 'other'}, routing_key: 'go.somewhere.else', delayed: true, delay_by: 3000)
+end
+# send the queued messages if we make it out of the transaction alive
+message_queuer.send_messages_safely
+```
 
 ## Receiving messages
 
