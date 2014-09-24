@@ -40,7 +40,9 @@ module Pwwka
     alias :create_delayed_queue :delayed_queue
 
     def raise_if_delayed_not_allowed
-      raise ConfigurationError unless configuration.allow_delayed?
+      unless configuration.allow_delayed?
+        raise ConfigurationError, "Delayed messages are not allowed. Update your configuration to allow them." 
+      end
     end
 
     def connection_close

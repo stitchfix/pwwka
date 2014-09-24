@@ -23,7 +23,7 @@ describe Pwwka::Transmitter do
         expect(received_payload["this"]).to eq("that")
       end
 
-      it "should delivery on the expected routing key" do
+      it "should deliver on the expected routing key" do
         success = Pwwka::Transmitter.new.send_message!(payload, routing_key)
         expect(success).to be_truthy
         delivery_info = @test_handler.pop_message.delivery_info
@@ -53,7 +53,7 @@ describe Pwwka::Transmitter do
         expect(received_payload["this"]).to eq("that")
       end
 
-      it "should delivery on the expected routing key" do
+      it "should deliver on the expected routing key" do
         success = Pwwka::Transmitter.new.send_delayed_message!(payload, routing_key, 1)
         expect(success).to be_truthy
         sleep 1

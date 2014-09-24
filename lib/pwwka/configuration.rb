@@ -1,11 +1,7 @@
 require 'bunny'
 require 'mono_logger'
 module Pwwka
-  class ConfigurationError < StandardError
-    def message
-      "The configuration does not allow this method to be called"
-    end
-  end
+  class ConfigurationError < StandardError; end
   class Configuration
 
     attr_accessor :rabbit_mq_host 
@@ -24,7 +20,7 @@ module Pwwka
 
 
     def allow_delayed?
-      options[:delayed]
+      options[:allow_delayed]
     end
 
   end

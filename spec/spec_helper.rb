@@ -13,7 +13,7 @@ RSpec.configure do |config|
 end
 
 Pwwka.configure do |config|
-  config.topic_exchange_name  = "topics-test"
-  config.logger               = MonoLogger.new("/dev/null")
-  config.options[:delayed]    = true
+  config.topic_exchange_name     = "topics-test"
+  config.logger                  = MonoLogger.new("/dev/null")
+  config.options[:allow_delayed] = true
 end

@@ -55,6 +55,7 @@ require 'pwwka'
 Pwwka.configure do |config|
   config.rabbit_mq_host      = ENV['RABBITMQ_URL']
   config.topic_exchange_name = "mycompany-topics-#{Rails.env}"
+  config.options             = {allow_delayed: true}
 end
 ```
 
@@ -102,7 +103,7 @@ routing_key	= 'sf.clients.client.created'
 Pwwka::Transmitter.send_message!(payload, routing_key, delayed: true, delay_by: 3000)
 ```
 
-`delay_by` is an integer of microseconds to delay the message. The default (if no value is set) is 5000 (5 seconds).
+`delay_by` is an integer of milliseconds to delay the message. The default (if no value is set) is 5000 (5 seconds).
 
 These extra arguments work for all message sending methods - the safe ones, the handling, and the message_queuer methods (see below).
 

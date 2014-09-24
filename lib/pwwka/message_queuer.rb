@@ -58,8 +58,8 @@ module Pwwka
 
     private
     def message_arguments(message)
-        delay_hash  = {delayed: message[:delayed], delay_by: message[:delay_by]}.delete_if{|_,v|!v}
-        [message[:payload], message[:routing_key], (delay_hash.any? ? delay_hash : nil)].compact
+      delay_hash  = {delayed: message[:delayed], delay_by: message[:delay_by]}.delete_if{|_,v|!v}
+      [message[:payload], message[:routing_key], (delay_hash.any? ? delay_hash : nil)].compact
     end
 
   end
