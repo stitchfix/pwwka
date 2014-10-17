@@ -1,3 +1,13 @@
+# Pwwka
+
+
+Pronounced "Poo-ka" |ˈpo͞okə|
+
+![Pwwka Bunny Bus](http://res.cloudinary.com/stitch-fix/image/upload/c_scale,w_317/v1408570794/bunny-bus_ba72ou.png)
+
+---
+
+
 This gem connects to a topic exchange on a RabbitMQ server. It gives any app using it the ability to do two things:
 
 * Transmit messages to the exchange
@@ -154,9 +164,10 @@ The available wildcards are as follows
 
 __A note on re-queuing:__ At the moment messages that raise an error on receipt are marked 'not acknowledged, don't resend', and the failure message is logged. All unacknowledged messages will be resent when the worker is restarted. The next iteration of this gem will allow for a specified number of resends without requiring a restart.
 
-__Spinning up some new dynos to handle the load:__ Since each named queue will receive each message only once you can spin up multiple process using the *same named queue* and they will share the messages between them. If you spin up three processes each will receive roughly one third of the messages, but each message will still only be received once.
+__Spinning up some more handlers to handle the load:__ Since each named queue will receive each message only once you can spin up multiple process using the *same named queue* and they will share the messages between them. If you spin up three processes each will receive roughly one third of the messages, but each message will still only be received once.
 
 ### Handlers
+
 Handlers are simple classes that must respond to `self.handle!`. The receiver will send the handler three arguments:
 
 * `delivery_info` - [a bunch of stuff](http://rubybunny.info/articles/queues.html#accessing_message_delivery_information)
@@ -168,7 +179,6 @@ Here is an example:
 ```ruby
 class ClientIndexMessageHandler
   
-  attr_reader :payload
   def initialize(payload)
     @payload = payload
   end
@@ -189,19 +199,25 @@ end
 ```
 
 ## Monitoring
+
 RabbitMQ has a good API that should make it easy to set up some simple monitoring. In the meantime there is logging and manual monitoring.
 
 ### Logging
+
 The receiver logs details of any exception raised in message handling:
+
 ```ruby
 error "Error Processing Message on #{queue_name} -> #{payload}, #{delivery_info.routing_key}: #{e}"
 ```
-.The transmitter will likewise log an error if you use the `_safely` methods:
+
+The transmitter will likewise log an error if you use the `_safely` methods:
+
 ```ruby
 error "Error Transmitting Message on #{routing_key} -> #{payload}: #{e}"
 ```
 
 ### Manual monitoring
+
 RabbitMQ has a web interface for checking out the health of connections, channels, exchanges and queues. Access it via the Heroku add-ons page for Enigma.
 
 ![RabbitMQ Management 1](docs/images/RabbitMQ_Management.png)
@@ -251,8 +267,19 @@ describe "my integration test" do
 end
 ```
 
-## TODO
-* automated monitoring
-* forking
-* resending
-* handling messages from inside transactions properly
+The pwwka gem has tests for all its functionality, so testing your app is best done with mocks on this gem. 
+
+However, if you want to test the message bus end-to-end in your app you can use some helpers in `lib/pwwka/test_handler.rb`. See this gem's specs for examples of how to use them.
+
+[See CONTRIBUTING.md for details on testing this gem](CONTRIBUTING.md#testing)
+
+## Contributing
+
+We're actively using Pwwka in production here at [Stitch Fix](http://technology.stitchfix.com/) and look forward to seeing Pwwka grow and improve with your help. Contributions are warmly welcomed.
+
+[See CONTRIBUTING.md for details](CONTRIBUTING.md)
+
+## Licence
+
+Pwwka is released under the [MIT License](http://www.opensource.org/licenses/MIT).
+
