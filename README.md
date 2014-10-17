@@ -49,11 +49,11 @@ And follow the instructions.
 Add to your `Gemfile`:
 
 ```ruby
-gem 'pwwka', require: false
+gem 'pwwka'
 ```
 
 
-### Set up your message_handler configration
+### Set up your pwwka configration
 
 Connect to your RabbitMQ instance using the url and choose a name for your
 topic exchange.
@@ -65,6 +65,7 @@ require 'pwwka'
 Pwwka.configure do |config|
   config.rabbit_mq_host      = ENV['RABBITMQ_URL']
   config.topic_exchange_name = "mycompany-topics-#{Rails.env}"
+  config.options             = {allow_delayed: true}
 end
 ```
 
@@ -103,6 +104,37 @@ send_message_safely(payload, routing_key)
 
 The messages are not transaction safe so for updates do your best to send them after the transaction commits. You must send create messages after the transaction commits or the receivers will probably not find the persisted records.
 
+### Delayed Messages
+You might want to delay sending a message (for example, if you have just created a database record and a race condition keeps catching you out). In that case you can use delayed message options:
+
+```ruby
+payload = {client_id: '13452564'}
+routing_key	= 'sf.clients.client.created'
+Pwwka::Transmitter.send_message!(payload, routing_key, delayed: true, delay_by: 3000)
+```
+
+`delay_by` is an integer of milliseconds to delay the message. The default (if no value is set) is 5000 (5 seconds).
+
+These extra arguments work for all message sending methods - the safe ones, the handling, and the message_queuer methods (see below).
+
+### Message Queuer
+You can queue up messages and send them in a batch. This is most useful when multiple messages need to sent from within a transaction block.
+  
+For example:
+
+```ruby
+# instantiate a message_queuer object
+message_queuer  = MessageQueuerService.new
+ActiveRecord::Base.transaction do
+  # do a thing, then queue message
+  message_queuer.queue_message(payload: {this: 'that'}, routing_key: 'go.to.there')
+
+  # do another thing, then queue a delayed message
+  message_queuer.queue_message(payload: {the: 'other'}, routing_key: 'go.somewhere.else', delayed: true, delay_by: 3000)
+end
+# send the queued messages if we make it out of the transaction alive
+message_queuer.send_messages_safely
+```
 
 ## Receiving messages
 
@@ -119,7 +151,7 @@ message_handler: rake message_handler:receive HANDLER_KLASS=ClientIndexMessageHa
 You'll also need to bring the Rake task into your app.  For Rails, you'll need to edit the top-level `Rakefile`:
 
 ```ruby
-require 'stitch_fix/message_handler/tasks'
+require 'pwwka/tasks'
 ```
 
 ### Queues - what messages will your queue receive
@@ -193,6 +225,47 @@ RabbitMQ has a web interface for checking out the health of connections, channel
 ![RabbitMQ Management 3](docs/images/RabbitMQ_Management-3.png)
 
 ## Testing
+
+This gem has test coverage of interacting with RabbitMQ, so for unit tests, your best
+strategy is to simply mock calls to `Pwwka::Transmitter`.
+
+For integration tests, however, you can examine the actual message bus by setting up
+the provided `Pwwka::TestHandler` like so:
+
+```ruby
+require 'pwwka/test_handler'
+
+describe "my integration test" do
+
+  before(:all) do
+    @test_handler = Pwwka::TestHandler.new
+    @test_handler.test_setup
+  end
+
+  after(:all) do 
+    # this clears out any messages, so you have a clean test environment next time
+    @test_handler.test_teardown 
+  end
+
+  it "uses the message bus" do
+    post "/items", item: { size: "L" }
+
+    message = @test_handler.pop_message
+
+    expect(message.delivery_info.routing_key).to eq("my-company.items.created")
+    expect(message.payload).to eq({ item: { id: 42, size: "L" } })
+  end
+
+  it "can splat the values as well" do
+    post "/items", item: { size: "L" }
+
+    delivery_info, payload = @test_handler.pop_message
+
+    expect(delivery_info.routing_key).to eq("my-company.items.created")
+    expect(payload).to eq({ item: { id: 42, size: "L" } })
+  end
+end
+```
 
 The pwwka gem has tests for all its functionality, so testing your app is best done with mocks on this gem. 
 
