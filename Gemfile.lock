@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pwwka (0.3.0)
+    pwwka (0.3.1)
       activemodel
       activesupport
       bunny
