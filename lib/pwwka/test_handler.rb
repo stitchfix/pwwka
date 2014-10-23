@@ -65,7 +65,7 @@ module Pwwka
       test_queue.delete
       channel_connector.topic_exchange.delete
       # delayed messages
-      unless Pwwka.configuration.allow_delayed?
+      if Pwwka.configuration.allow_delayed?
         channel_connector.delayed_queue.delete
         channel_connector.delayed_exchange.delete
       end
