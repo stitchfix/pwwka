@@ -3,7 +3,7 @@
 
 Pronounced "Poo-ka" |ˈpo͞okə|
 
-![Pwwka Bunny Bus](http://res.cloudinary.com/stitch-fix/image/upload/c_scale,w_317/v1408570794/bunny-bus_ba72ou.png)
+![Pwwka Legit](http://res.cloudinary.com/stitch-fix/image/upload/c_scale,h_300/v1413580920/pwwka_yuw7hl.png)
 
 ---
 
