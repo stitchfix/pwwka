@@ -20,7 +20,7 @@ describe Pwwka::QueueResqueJobHandler do
 
     before do
       allow(Resque).to receive(:enqueue)
-      ENV["JOB_CLASS"] = MyTestJob.name
+      ENV["JOB_KLASS"] = MyTestJob.name
 
       described_class.handle!(delivery_info,properties,payload)
     end

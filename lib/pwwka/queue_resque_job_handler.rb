@@ -1,4 +1,4 @@
-require 'active_support/core_ext/string/inflections.rb'
+require 'active_support/core_ext/string/inflections'
 require 'resque'
 
 module Pwwka
