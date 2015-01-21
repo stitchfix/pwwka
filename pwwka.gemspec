@@ -24,4 +24,5 @@ Gem::Specification.new do |s|
   s.add_dependency("mono_logger")
   s.add_development_dependency("rake")
   s.add_development_dependency("rspec")
+  s.add_development_dependency("resque")
 end

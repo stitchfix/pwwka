@@ -21,11 +21,11 @@ The basic principle of the Pwwka Message Bus is this:
 
 As an example:
 
-* public_app sends a message that a new client has signed up
-* admin_app receives that message and updates its client index
-* email_app receives that message and sends a welcome email to the client
+* public-app sends a message that a new client has signed up
+* admin-app receives that message and updates its client index
+* email-app receives that message and sends a welcome email to the client
 
-### Persistence
+## Persistence
 
 All transmitters and receivers share the same exchange. This means that all receivers can read all messages that any transmitter sends. To ensure that all messages are received by eveyone who wants them the Pwwka message bus is configured as follows:
 
@@ -115,7 +115,7 @@ Pwwka::Transmitter.send_message!(payload, routing_key, delayed: true, delay_by: 
 
 `delay_by` is an integer of milliseconds to delay the message. The default (if no value is set) is 5000 (5 seconds).
 
-These extra arguments work for all message sending methods - the safe ones, the handling, and the message_queuer methods (see below).
+These extra arguments work for all message sending methods - the safe ones, the handling, and the `message_queuer` methods (see below).
 
 ### Message Queuer
 You can queue up messages and send them in a batch. This is most useful when multiple messages need to sent from within a transaction block.
@@ -158,8 +158,8 @@ require 'pwwka/tasks'
 
 It depends on your `routing_key`. If you set your routing key to `#.#` (the default) it will receive all the messages. The `#` is a wildcard so if you set it to `client.#` it will receive any message with `client.` at the beginning. The exchange registers the queue's name and routing key so it knows what messages the queue is supposed to receive. A named queue will receive each message it expects to get once and only once.
 
-The available wildcards are as follows
-* `*` (star) can substitute for exactly one word.
+The available wildcards are as follows (and are not intuitive):
+* `*` (star) can substitute for **exactly one word**.
 * `#` (hash) can substitute for zero or more words.
 
 __A note on re-queuing:__ At the moment messages that raise an error on receipt are marked 'not acknowledged, don't resend', and the failure message is logged. All unacknowledged messages will be resent when the worker is restarted. The next iteration of this gem will allow for a specified number of resends without requiring a restart.
@@ -197,6 +197,51 @@ class ClientIndexMessageHandler
 
 end
 ```
+
+#### Handling Messages with Resque
+
+If you use [Resque][resque], and you wish to handle messages in a resque job, you can use `Pwwka::QueueResqueJobHandler`, which is an adapter between the
+standard `handle!` method provided by pwwka and your Resque job.
+
+1. First, modify your `Gemfile` or otherwise arrange to include `pwwka/queue_resque_job_handler`:
+
+   ```ruby
+   gem 'pwwka', require: [ 'pwwka', 'pwwka/queue_resque_job_handler' ]
+   ```
+
+   or, in `config/initializers/pwwka.rb`:
+
+   ```ruby
+   require 'pwwka/queue_resque_job_handler'
+   ```
+
+2. Now, configure your handler.  For a `Procfile` setup:
+   
+   ```
+   my_handler: rake message_handler:receive HANDLER_KLASS=Pwwka::QueueResqueJobHandler JOB_KLASS=MyResqueJob QUEUE_NAME=my_queue ROUTING_KEY="my.key.completed"
+   ```
+
+   Note the use of the environment variable `JOB_KLASS`.  This tells `QueueResqueJobHandler` which class to queue.
+3. Now, write your job.
+
+   ```ruby
+   class MyResqueJob
+     @queue = :my_resque_queue
+
+     def self.process(args) # i.e. payload
+       user = User.find(args.fetch("user_id")) # or whatever
+       user.frobnosticate!
+     end
+   end
+   ```
+
+   Note that you must provide `@queue` in your job.  `QueueResqueJobHandler` doesn't support setting a custom queue and enqueue-time (PRs welcome :).
+   Note further that your job class is not given the routing key, so you'll have to set `ROUTING_KEY` appropriately for whatever it is you're trying to
+   do.
+3. Profit!
+
+[resque]: https://github.com/resque/resque/tree/1-x-stable
+
 
 ## Monitoring
 
