@@ -22,7 +22,7 @@ module Pwwka
       receiver  = new(queue_name, routing_key)
       begin
         info "Receiving on #{queue_name}"
-        receiver.topic_queue.subscribe(ack: true, block: block) do |delivery_info, properties, payload|
+        receiver.topic_queue.subscribe(manual_ack: true, block: block) do |delivery_info, properties, payload|
           begin
             payload = ActiveSupport::HashWithIndifferentAccess.new(JSON.parse(payload))
             handler_klass.handle!(delivery_info, properties, payload)
