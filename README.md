@@ -6,7 +6,7 @@ Pronounced "Poo-ka" |ˈpo͞okə|
 ![Pwwka Legit](http://res.cloudinary.com/stitch-fix/image/upload/c_scale,h_300/v1413580920/pwwka_yuw7hl.png)
 
 ---
-
+[![Build Status](https://travis-ci.org/stitchfix/pwwka.svg?branch=add_travis_yml)](https://travis-ci.org/stitchfix/pwwka)
 
 This gem connects to a topic exchange on a RabbitMQ server. It gives any app using it the ability to do two things:
 
