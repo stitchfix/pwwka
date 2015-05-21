@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.version     = Pwwka::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = ['Stitch Fix Engineering']
-  s.email       = ['eng@stitchfix.com']
+  s.email       = ['opensource@stitchfix.com']
   s.homepage    = "http://www.stitchfix.com"
   s.summary     = "Send and receive messages via RabbitMQ"
   s.description = "The purpose of this gem is to normalise the sending and
