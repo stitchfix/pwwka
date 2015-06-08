@@ -9,6 +9,7 @@ Gem::Specification.new do |s|
   s.authors     = ['Stitch Fix Engineering']
   s.email       = ['opensource@stitchfix.com']
   s.homepage    = "https://github.com/stitchfix/pwwka"
+  s.license     = "MIT"
   s.summary     = "Send and receive messages via RabbitMQ"
   s.description = "The purpose of this gem is to normalise the sending and
   receiving of messages between Rails apps using the shared RabbitMQ
