@@ -7,7 +7,7 @@ Gem::Specification.new do |s|
   s.version     = Pwwka::VERSION
   s.platform    = Gem::Platform::RUBY
   s.authors     = ["Stitch Fix Engineering","Andrew Peterson","Bill Eisenhauer","Dave Copeland","David A McClain","Jonathan Dean","Nick Reavill","Simeon Willbanks"]
-  s.email       = ["opensource@stitchfix.com","andy@ndpsoftware.com","bill@stitchfix.com","davetron5000@gmail.com","david@stitchfix.com","jon@jonathandean.com","nick@fluxequalsrad.com","simeon@stitchfix.com" ]
+  s.email       = ["opensource@stitchfix.com","andy@ndpsoftware.com","bill@stitchfix.com","davetron5000@gmail.com","david@stitchfix.com","jon@jonathandean.com","nick@fluxequalsrad.com","simeon@simeons.net" ]
   s.homepage    = "https://github.com/stitchfix/pwwka"
   s.license     = "MIT"
   s.summary     = "Send and receive messages via RabbitMQ"
