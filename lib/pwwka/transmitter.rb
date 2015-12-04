@@ -46,13 +46,23 @@ module Pwwka
         new.send_message!(payload, routing_key)
       end
       info "AFTER Transmitting Message on #{routing_key} -> #{payload}"
+
     rescue => e
+
       error "ERROR Transmitting Message on #{routing_key} -> #{payload}: #{e}"
+
       case on_error
+
         when :raise
           raise e
+
         when :resque
-          send_message_async(payload, routing_key, delay_by_ms: delayed ? delay_by || DEFAULT_DELAY_BY_MS : 0)
+          begin
+            send_message_async(payload, routing_key, delay_by_ms: delayed ? delay_by || DEFAULT_DELAY_BY_MS : 0)
+          rescue => resque_exception
+            warn(resque_exception.message)
+            raise e
+          end
         else # ignore
       end
       false
