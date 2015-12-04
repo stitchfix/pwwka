@@ -1,4 +1,4 @@
-require 'resque'
+require 'resque' rescue nil # optional dependency
 
 module Pwwka
   # Primary interface for sending messages.
