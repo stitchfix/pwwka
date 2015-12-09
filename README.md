@@ -84,7 +84,8 @@ The payload should be a simple hash containing primitives. Don't send objects be
 Pwwka::Transmitter.send_message_safely(payload, routing_key)
 ```
 
-You can also use the two convenience methods for sending a message. To include these methods in your class use:
+You can also use the two convenience methods for sending a message. To include these methods 
+in your class use:
 
 ```ruby
 include Pwwka::Handling
@@ -96,16 +97,18 @@ Then you can call:
 send_message!(payload, routing_key)
 ```
 
-This method will blow up if something goes wrong. If you want to send safely then use:
+### Error Handling
+This method accepts several strategies for handling errors, pass in using the `on_error` parameter:
 
-```ruby
-send_message_safely(payload, routing_key)
-```
-
-The messages are not transaction safe so for updates do your best to send them after the transaction commits. You must send create messages after the transaction commits or the receivers will probably not find the persisted records.
+  * `:raise`: Log the error and raise the exception received from Bunny. (default strategy)
+  * `:ignore`: Log the error and return false.
+  * `:resque`: Log the error and return false. Also, enqueue a job with Resque 
+    to send the message. See `send_message_async` below.
 
 ### Delayed Messages
-You might want to delay sending a message (for example, if you have just created a database record and a race condition keeps catching you out). In that case you can use delayed message options:
+You might want to delay sending a message (for example, if you have just created a database 
+record and a race condition keeps catching you out). In that case you can use delayed message 
+options:
 
 ```ruby
 payload = {client_id: '13452564'}
@@ -117,8 +120,25 @@ Pwwka::Transmitter.send_message!(payload, routing_key, delayed: true, delay_by: 
 
 These extra arguments work for all message sending methods - the safe ones, the handling, and the `message_queuer` methods (see below).
 
+
+### Sending message Async with Resque
+
+To enqueue a message in a background Resque job, use `Transmitter.send_message_async` 
+```ruby
+Pwwka::Transmitter.send_message_async(payload, routing_key, delay_by_ms: 5000) # default delay is 0
+```
+
+If `Resque::Plugins::ExponentialBackoff` is available, the job will use it.
+Customize the backoff intervals using the configuration `send_message_resque_backoff_strategy`.
+The default backoff will retry quickly in case of an intermittent glitch, and then every ten 
+minutes for half an hour.
+ 
+The name of the queue created is `pwwka_send_message_async`.
+
+
 ### Message Queuer
-You can queue up messages and send them in a batch. This is most useful when multiple messages need to sent from within a transaction block.
+You can queue up messages and send them in a batch. This is most useful when multiple messages 
+need to sent from within a transaction block.
   
 For example:
 

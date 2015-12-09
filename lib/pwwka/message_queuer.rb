@@ -28,7 +28,9 @@ module Pwwka
       @message_queue  = []
     end
 
-    def queue_message(payload:, routing_key:, delayed: false, delay_by: nil)
+    def queue_message(payload: nil, routing_key: nil, delayed: false, delay_by: nil)
+      raise 'Missing payload' if payload.nil?
+      raise 'Missing routing_key' if routing_key.nil?
       message_queue.push({
             payload: payload,
         routing_key: routing_key,
