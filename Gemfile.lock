@@ -6,7 +6,6 @@ PATH
       activesupport
       bunny
       mono_logger
-      resque
 
 GEM
   remote: https://www.rubygems.org/
@@ -73,6 +72,7 @@ PLATFORMS
 DEPENDENCIES
   pwwka!
   rake
+  resque
   rspec
 
 BUNDLED WITH
