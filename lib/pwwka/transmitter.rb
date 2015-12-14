@@ -1,4 +1,7 @@
-require 'resque' rescue nil # optional dependency
+begin  # optional dependency
+  require 'resque'
+rescue => LoadError
+end
 
 module Pwwka
   # Primary interface for sending messages.
