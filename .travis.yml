@@ -6,4 +6,7 @@ rvm:
   - ruby-head
 services:
   - rabbitmq
-install: eval bundle install --jobs=3 --retry=3 --deployment --verbose
+install:
+  - gem uninstall bundler
+  - gem install bundler --version '1.10.6'
+  - eval bundle install --jobs=3 --retry=3 --deployment --verbose
