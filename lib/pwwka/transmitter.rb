@@ -1,6 +1,6 @@
 begin  # optional dependency
   require 'resque'
-rescue => LoadError
+rescue LoadError
 end
 
 module Pwwka
