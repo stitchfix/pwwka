@@ -21,7 +21,6 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.add_runtime_dependency("bunny")
   s.add_runtime_dependency("activesupport")
-  s.add_runtime_dependency("activemodel")
   s.add_runtime_dependency("mono_logger")
   s.add_development_dependency("rake")
   s.add_development_dependency("rspec")
