@@ -10,10 +10,22 @@ describe Pwwka::Transmitter do
   after(:each) { @test_handler.purge_test_queue }
   after(:all) { @test_handler.test_teardown }
 
-  let(:payload) { Hash[:this, "that"] }
+  let(:payload)     { { "this" => "that" } }
   let(:routing_key) { "this.that.and.theother" }
   let(:exception) { RuntimeError.new('blow up')}
+  let(:logger) { double(Logger) }
 
+  before(:each) do
+    @original_logger = Pwwka.configuration.logger
+    Pwwka.configuration.logger = logger
+    allow(logger).to receive(:info)
+    allow(logger).to receive(:warn)
+    allow(logger).to receive(:error)
+  end
+
+  after(:each) do
+    Pwwka.configuration.logger = @original_logger
+  end
 
   describe "#send_message!" do
 
@@ -23,6 +35,8 @@ describe Pwwka::Transmitter do
         expect(success).to be_truthy
         received_payload = @test_handler.pop_message.payload
         expect(received_payload["this"]).to eq("that")
+        expect(logger).to have_received(:info).with("START Transmitting Message on #{routing_key} -> #{payload}")
+        expect(logger).to have_received(:info).with("END Transmitting Message on #{routing_key} -> #{payload}")
       end
 
       it "should deliver on the expected routing key" do
@@ -34,10 +48,12 @@ describe Pwwka::Transmitter do
     end
 
     it "should blow up if exception raised" do
-      expect(Pwwka::ChannelConnector).to receive(:new).and_raise(exception)
+      expect_any_instance_of(Pwwka::ChannelConnector).to receive(:topic_exchange).and_raise(exception)
       expect {
         Pwwka::Transmitter.new.send_message!(payload, routing_key)
       }.to raise_error(exception)
+      expect(logger).to     have_received(:info).with("START Transmitting Message on #{routing_key} -> #{payload}")
+      expect(logger).not_to have_received(:info).with("END Transmitting Message on #{routing_key} -> #{payload}")
     end
 
   end

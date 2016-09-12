@@ -49,7 +49,7 @@ module Pwwka
         new.send_message!(payload, routing_key)
       end
       info "AFTER Transmitting Message on #{routing_key} -> #{payload}"
-
+      true
     rescue => e
 
       error "ERROR Transmitting Message on #{routing_key} -> #{payload}: #{e}"
