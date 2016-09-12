@@ -69,6 +69,8 @@ describe Pwwka::Transmitter do
         expect(@test_handler.test_queue.message_count).to eq(1)
         received_payload = @test_handler.pop_message.payload
         expect(received_payload["this"]).to eq("that")
+        expect(logger).to have_received(:info).with("START Transmitting Delayed Message on #{routing_key} -> #{payload}")
+        expect(logger).to have_received(:info).with("END Transmitting Delayed Message on #{routing_key} -> #{payload}")
       end
 
       it "should deliver on the expected routing key" do
@@ -81,10 +83,12 @@ describe Pwwka::Transmitter do
     end
 
     it "should blow up if exception raised" do
-      expect(Pwwka::ChannelConnector).to receive(:new).and_raise(exception)
+      expect_any_instance_of(Pwwka::ChannelConnector).to receive(:create_delayed_queue).and_raise(exception)
       expect {
         Pwwka::Transmitter.new.send_delayed_message!(payload, routing_key, 1)
       }.to raise_error(exception)
+      expect(logger).to have_received(:info).with("START Transmitting Delayed Message on #{routing_key} -> #{payload}")
+      expect(logger).not_to have_received(:info).with("END Transmitting Delayed Message on #{routing_key} -> #{payload}")
     end
 
     context "delayed not configured" do

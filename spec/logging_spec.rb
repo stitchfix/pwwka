@@ -16,4 +16,7 @@ describe Pwwka::Logging do
     end
 
   end
+
+  describe "#logf" do
+  end
 end

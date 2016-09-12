@@ -7,5 +7,11 @@ module Pwwka
       Pwwka.configuration.logger
     end
 
+    def logf(format,args)
+      level = args.delete(:at) || :info
+      message = format % args
+      logger.send(level,message)
+    end
+
   end
 end

@@ -27,9 +27,9 @@ module Pwwka
             payload = ActiveSupport::HashWithIndifferentAccess.new(JSON.parse(payload))
             handler_klass.handle!(delivery_info, properties, payload)
             receiver.ack(delivery_info.delivery_tag)
-            info "Processed Message on #{queue_name} -> #{payload}, #{delivery_info.routing_key}"
+            logf "Processed Message on %{queue_name} -> %{payload}, %{routing_key}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key
           rescue => e
-            error "Error Processing Message on #{queue_name} -> #{payload}, #{delivery_info.routing_key}: #{e}"
+            logf "Error Processing Message on %{queue_name} -> %{payload}, %{routing_key}: %{exception}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key, exception: e, at: :error
             # no requeue
             receiver.nack(delivery_info.delivery_tag)
           end
@@ -47,7 +47,7 @@ module Pwwka
         queue = channel.queue(queue_name, durable: true)
         queue.bind(topic_exchange, routing_key: routing_key)
         queue
-      end 
+      end
     end
 
     def ack(delivery_tag)
