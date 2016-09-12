@@ -281,6 +281,14 @@ The transmitter will likewise log an error if you use the `_safely` methods:
 error "Error Transmitting Message on #{routing_key} -> #{payload}: #{e}"
 ```
 
+If your payloads are large, you may not want to log them 2-3 times per message.  In that case, you can adjust `payload_logging` in the configuration:
+
+```ruby
+Pwwka.configuration.payload_logging = :info # The default - payloads appear at INFO and above log levels
+Pwwka.configuration.payload_logging = :error # Only log payloads for ERROR or FATAL messages
+Pwwka.configuration.payload_logging = :fatal # Only log payloads for FATAL messages
+```
+
 ### Manual monitoring
 
 RabbitMQ has a web interface for checking out the health of connections, channels, exchanges and queues. Access it via the Heroku add-ons page for Enigma.
