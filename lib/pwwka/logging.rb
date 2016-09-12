@@ -15,11 +15,11 @@ module Pwwka
       debug: 1,
     }
 
-    def logf(format,args)
-      level = args.delete(:at) || :info
-      args[:payload] = args["payload"] if args["payload"]
-      args[:payload] = "[omitted]" if args[:payload] && LEVELS[Pwwka.configuration.payload_logging.to_sym] > LEVELS[level.to_sym]
-      message = format % args
+    def logf(format,params)
+      level = params.delete(:at) || :info
+      params[:payload] = params["payload"] if params["payload"]
+      params[:payload] = "[omitted]" if params[:payload] && LEVELS[Pwwka.configuration.payload_logging.to_sym] > LEVELS[level.to_sym]
+      message = format % params
       logger.send(level,message)
     end
 
