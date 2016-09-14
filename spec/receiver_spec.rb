@@ -8,23 +8,32 @@ describe Pwwka::Receiver do
     end
   end
 
-  let(:payload)     { Hash[:this, "that"] }
+  let(:payload)     { { "this" => "that" } }
   let(:routing_key) { "this.that" }
   let(:queue_name)  { "receiver_test" }
+  let(:logger)      { double(Logger) }
 
   describe "::subscribe" do
 
     before(:each) do
+      @original_logger = Pwwka.configuration.logger
+      Pwwka.configuration.logger = logger
+      allow(logger).to receive(:info)
+      allow(logger).to receive(:error)
       @receiver = Pwwka::Receiver.subscribe(HandyHandler, "receiver_test", block: false)
     end
 
     after(:each) do
-      @receiver.test_teardown
+      Pwwka.configuration.logger = @original_logger
+      @receiver.test_teardown rescue nil
     end
 
-    it "should receive the sent message" do
+    it "should receive the sent message and log about it" do
       expect(HandyHandler).to receive(:handle!).and_return("made it here")
       Pwwka::Transmitter.send_message!(payload, routing_key)
+      expect(logger).to have_received(:info).with(/START Transmitting.*#{Regexp.escape(payload.to_s)}/)
+      expect(logger).to have_received(:info).with(/END Transmitting.*#{Regexp.escape(payload.to_s)}/)
+      expect(logger).to have_received(:info).with(/AFTER Transmitting.*#{Regexp.escape(payload.to_s)}/)
     end
 
     it "should nack the sent message if an error is raised" do
@@ -32,6 +41,11 @@ describe Pwwka::Receiver do
       expect(@receiver).not_to receive(:ack)
       expect(@receiver).to receive(:nack).with(instance_of(Fixnum))
       Pwwka::Transmitter.send_message!(payload, routing_key)
+      @receiver.test_teardown # force the message to be processed and exception handled
+      expect(logger).to have_received(:info).with(/START Transmitting.*#{Regexp.escape(payload.to_s)}/)
+      expect(logger).to have_received(:info).with(/END Transmitting.*#{Regexp.escape(payload.to_s)}/)
+      expect(logger).to have_received(:info).with(/AFTER Transmitting.*#{Regexp.escape(payload.to_s)}/)
+      expect(logger).to have_received(:error).with(/Error Processing Message.*#{Regexp.escape(payload.to_s)}/)
     end
 
   end

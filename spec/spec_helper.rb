@@ -10,10 +10,13 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
+  config.before(:each) do
+    Pwwka.configure do |c|
+      c.topic_exchange_name     = "topics-test"
+      c.logger                  = MonoLogger.new("/dev/null")
+      c.options[:allow_delayed] = true
+    end
+  end
+
 end
 
-Pwwka.configure do |config|
-  config.topic_exchange_name     = "topics-test"
-  config.logger                  = MonoLogger.new("/dev/null")
-  config.options[:allow_delayed] = true
-end

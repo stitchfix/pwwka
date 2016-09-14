@@ -4,7 +4,7 @@ module Pwwka
   class ConfigurationError < StandardError; end
   class Configuration
 
-    attr_accessor :rabbit_mq_host 
+    attr_accessor :rabbit_mq_host
     attr_accessor :topic_exchange_name
     attr_accessor :delayed_exchange_name
     attr_accessor :logger
@@ -22,6 +22,13 @@ module Pwwka
                                                600, 600, 600] # longer-term outage?
     end
 
+    def payload_logging
+      @payload_logging || :info
+    end
+
+    def payload_logging=(new_payload_logging_level)
+      @payload_logging = new_payload_logging_level
+    end
 
     def allow_delayed?
       options[:allow_delayed]

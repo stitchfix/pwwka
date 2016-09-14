@@ -48,11 +48,11 @@ module Pwwka
       else
         new.send_message!(payload, routing_key)
       end
-      info "AFTER Transmitting Message on #{routing_key} -> #{payload}"
-
+      logf "AFTER Transmitting Message on %{routing_key} -> %{payload}",routing_key: routing_key, payload: payload
+      true
     rescue => e
 
-      error "ERROR Transmitting Message on #{routing_key} -> #{payload}: #{e}"
+      logf "ERROR Transmitting Message on %{routing_key} -> %{payload}", routing_key: routing_key, payload: payload, at: :error
 
       case on_error
 
@@ -92,21 +92,21 @@ module Pwwka
     end
 
     def send_message!(payload, routing_key)
-      info "START Transmitting Message on #{routing_key} -> #{payload}"
+      logf "START Transmitting Message on %{routing_key} -> %{payload}", routing_key: routing_key, payload: payload
       channel_connector.topic_exchange.publish(
           payload.to_json,
           routing_key: routing_key,
           persistent:  true)
       channel_connector.connection_close
       # if it gets this far it has succeeded
-      info "END Transmitting Message on #{routing_key} -> #{payload}"
+      logf "END Transmitting Message on %{routing_key} -> %{payload}", routing_key: routing_key, payload: payload
       true
     end
 
 
     def send_delayed_message!(payload, routing_key, delay_by = DEFAULT_DELAY_BY_MS)
       channel_connector.raise_if_delayed_not_allowed
-      info "START Transmitting Delayed Message on #{routing_key} -> #{payload}"
+      logf "START Transmitting Delayed Message on %{routing_key} -> %{payload}", routing_key: routing_key, payload: payload
       channel_connector.create_delayed_queue
       channel_connector.delayed_exchange.publish(
           payload.to_json,
@@ -115,7 +115,7 @@ module Pwwka
           persistent:  true)
       channel_connector.connection_close
       # if it gets this far it has succeeded
-      info "END Transmitting Delayed Message on #{routing_key} -> #{payload}"
+      logf "END Transmitting Delayed Message on %{routing_key} -> %{payload}", routing_key: routing_key, payload: payload
       true
     end
 
