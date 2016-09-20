@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pwwka (0.5.2)
+    pwwka (0.6.0)
       activemodel
       activesupport
       bunny
@@ -21,7 +21,7 @@ GEM
       tzinfo (~> 1.1)
     amq-protocol (2.0.1)
     builder (3.2.2)
-    bunny (2.3.0)
+    bunny (2.3.1)
       amq-protocol (>= 2.0.1)
     diff-lcs (1.2.5)
     i18n (0.7.0)
@@ -76,4 +76,4 @@ DEPENDENCIES
   rspec
 
 BUNDLED WITH
-   1.11.2
+   1.12.5
