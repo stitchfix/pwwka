@@ -29,7 +29,7 @@ module Pwwka
             receiver.ack(delivery_info.delivery_tag)
             logf "Processed Message on %{queue_name} -> %{payload}, %{routing_key}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key
           rescue => e
-            logf "Error Processing Message on %{queue_name} -> %{payload}, %{routing_key}: %{exception}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key, exception: e, at: :error
+            logf "Error Processing Message on %{queue_name} -> %{payload}, %{routing_key}: %{exception}: %{backtrace}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key, exception: e, backtrace: e.backtrace.join(';'), at: :error
             # no requeue
             receiver.nack(delivery_info.delivery_tag)
           end

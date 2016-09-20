@@ -37,7 +37,12 @@ describe Pwwka::Receiver do
     end
 
     it "should nack the sent message if an error is raised" do
-      expect(HandyHandler).to receive(:handle!).and_raise("blow up")
+      exception = begin
+                    raise "blow up"
+                  rescue => ex
+                    ex
+                  end
+      expect(HandyHandler).to receive(:handle!).and_raise(ex)
       expect(@receiver).not_to receive(:ack)
       expect(@receiver).to receive(:nack).with(instance_of(Fixnum))
       Pwwka::Transmitter.send_message!(payload, routing_key)
@@ -45,7 +50,7 @@ describe Pwwka::Receiver do
       expect(logger).to have_received(:info).with(/START Transmitting.*#{Regexp.escape(payload.to_s)}/)
       expect(logger).to have_received(:info).with(/END Transmitting.*#{Regexp.escape(payload.to_s)}/)
       expect(logger).to have_received(:info).with(/AFTER Transmitting.*#{Regexp.escape(payload.to_s)}/)
-      expect(logger).to have_received(:error).with(/Error Processing Message.*#{Regexp.escape(payload.to_s)}/)
+      expect(logger).to have_received(:error).with(/Error Processing Message.*#{Regexp.escape(payload.to_s)}.*#{Regexp.escape(exception.backtrace.join(';'))}/)
     end
 
   end
