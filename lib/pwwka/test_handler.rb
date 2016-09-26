@@ -30,7 +30,7 @@ module Pwwka
                        end
     end
 
-    # Get the message on the queue as TestHandler::Message.
+    # Get the message on the queue as TestHandler::Message
     def pop_message
       delivery_info, properties, payload = test_queue.pop
       Message.new(delivery_info,
@@ -70,7 +70,7 @@ module Pwwka
         channel_connector.delayed_exchange.delete
       end
 
-      channel_connector.connection_close 
+      channel_connector.connection_close
     end
 
     # Simple class to hold a popped message.
