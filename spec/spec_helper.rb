@@ -10,7 +10,7 @@ RSpec.configure do |config|
     c.syntax = :expect
   end
 
-  config.before(:each) do
+  config.before(:all) do
     Pwwka.configure do |c|
       c.topic_exchange_name     = "topics-test"
       c.logger                  = MonoLogger.new("/dev/null")
