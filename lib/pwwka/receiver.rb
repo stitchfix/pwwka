@@ -30,8 +30,11 @@ module Pwwka
             logf "Processed Message on %{queue_name} -> %{payload}, %{routing_key}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key
           rescue => e
             logf "Error Processing Message on %{queue_name} -> %{payload}, %{routing_key}: %{exception}: %{backtrace}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key, exception: e, backtrace: e.backtrace.join(';'), at: :error
-            # no requeue
-            receiver.nack(delivery_info.delivery_tag)
+            if Pwwka.configuration.requeue_on_error && !delivery_info.redelivered
+              receiver.nack_requeue(delivery_info.delivery_tag)
+            else
+              receiver.nack(delivery_info.delivery_tag)
+            end
           end
         end
       rescue Interrupt => _
@@ -63,14 +66,14 @@ module Pwwka
     end
 
     def drop_queue
-      topic_queue.purge  
+      topic_queue.purge
       topic_queue.delete
     end
 
     def test_teardown
       drop_queue
       topic_exchange.delete
-      channel_connector.connection_close 
+      channel_connector.connection_close
     end
 
   end

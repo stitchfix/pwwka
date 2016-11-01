@@ -10,6 +10,7 @@ module Pwwka
     attr_accessor :logger
     attr_accessor :options
     attr_accessor :send_message_resque_backoff_strategy
+    attr_accessor :requeue_on_error
 
     def initialize
       @rabbit_mq_host        = nil
@@ -20,6 +21,7 @@ module Pwwka
       @send_message_resque_backoff_strategy = [5,                  #intermittent glitch?
                                                60,                 # quick interruption
                                                600, 600, 600] # longer-term outage?
+      @requeue_on_error = false
     end
 
     def payload_logging
