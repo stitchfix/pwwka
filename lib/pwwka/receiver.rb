@@ -29,10 +29,11 @@ module Pwwka
             receiver.ack(delivery_info.delivery_tag)
             logf "Processed Message on %{queue_name} -> %{payload}, %{routing_key}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key
           rescue => e
-            logf "Error Processing Message on %{queue_name} -> %{payload}, %{routing_key}: %{exception}: %{backtrace}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key, exception: e, backtrace: e.backtrace.join(';'), at: :error
             if Pwwka.configuration.requeue_on_error && !delivery_info.redelivered
+              logf "Retrying an Error Processing Message on %{queue_name} -> %{payload}, %{routing_key}: %{exception}: %{backtrace}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key, exception: e, backtrace: e.backtrace.join(';'), at: :error
               receiver.nack_requeue(delivery_info.delivery_tag)
             else
+              logf "Error Processing Message on %{queue_name} -> %{payload}, %{routing_key}: %{exception}: %{backtrace}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key, exception: e, backtrace: e.backtrace.join(';'), at: :error
               receiver.nack(delivery_info.delivery_tag)
             end
           end
@@ -47,7 +48,12 @@ module Pwwka
 
     def topic_queue
       @topic_queue ||= begin
-        queue = channel.queue(queue_name, durable: true)
+        arguments = if channel_connector.dead_letter_exchange.nil?
+                      {}
+                    else
+                      { "x-dead-letter-exchange" => channel_connector.dead_letter_exchange.name }
+                    end
+        queue = channel.queue(queue_name, durable: true, arguments: arguments)
         queue.bind(topic_exchange, routing_key: routing_key)
         queue
       end
