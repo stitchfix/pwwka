@@ -48,12 +48,7 @@ module Pwwka
 
     def topic_queue
       @topic_queue ||= begin
-        arguments = if channel_connector.dead_letter_exchange.nil?
-                      {}
-                    else
-                      { "x-dead-letter-exchange" => channel_connector.dead_letter_exchange.name }
-                    end
-        queue = channel.queue(queue_name, durable: true, arguments: arguments)
+        queue = channel.queue(queue_name, durable: true, arguments: {})
         queue.bind(topic_exchange, routing_key: routing_key)
         queue
       end

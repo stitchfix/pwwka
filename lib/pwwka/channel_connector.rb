@@ -26,14 +26,6 @@ module Pwwka
       @delayed_exchange ||= channel.fanout(configuration.delayed_exchange_name, durable: true)
     end
 
-    def dead_letter_exchange
-      @dead_letter_exchange ||= if configuration.dead_letter_exchange_name.nil?
-                                  nil
-                                else
-                                  channel.fanout(configuration.dead_letter_exchange_name, durable: true)
-                                end
-    end
-
     def delayed_queue
       # This works by hacking the dead letter exchange concept with a timeout.
       # We set up a delayed exchange that has a delayed queue.  This queue, configured below,
