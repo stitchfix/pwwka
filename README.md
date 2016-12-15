@@ -98,12 +98,12 @@ send_message!(payload, routing_key)
 ```
 
 ### Error Handling
+
 This method accepts several strategies for handling errors, pass in using the `on_error` parameter:
 
   * `:raise`: Log the error and raise the exception received from Bunny. (default strategy)
   * `:ignore`: Log the error and return false.
-  * `:resque`: Log the error and return false. Also, enqueue a job with Resque 
-    to send the message. See `send_message_async` below.
+  * `:resque`: Log the error and return false. Also, enqueue a job with Resque to send the message. See `send_message_async` below. **Note, this doesn't guarantee the message will actually be sent—it just guarantees an attempt is made to queue a Resque job [which could fail]**
 
 ### Delayed Messages
 You might want to delay sending a message (for example, if you have just created a database 
@@ -217,6 +217,32 @@ class ClientIndexMessageHandler
 
 end
 ```
+#### Handling Errors
+
+By default, if your handler raises an uncaught exception, the message will be Nacked, **but not requeued**.  This means
+it's dropped on the floor and likely won't have been completely processed.
+
+You can configure `requeue_on_error` in the configuration to change this behavior:
+
+```ruby
+require 'pwwka'
+Pwwka.configure do |config|
+
+  # ...
+
+  config.requeue_on_error = true
+end
+```
+
+This will requeue the message **exactly once**.  It uses the headers to check if the message has been retried.  If it
+hasn't, and your handler raises an exception, it will be placed back on the queue.  The second time your handler
+processes it, there is a header indicating it's been retried, so if a failure happens again, the message **is not
+requeued**.
+
+Because requeuing puts the message at the head of the queue, a hard failure will result in an infinite loop, which will
+lead to filling up your queue. Nevertheless, this should address intermittent failures.
+
+**It is recommended that you set this option**.  It's off for backwards compatibility.
 
 #### Handling Messages with Resque
 
