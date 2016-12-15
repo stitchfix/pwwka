@@ -32,7 +32,7 @@ module Pwwka
       # sets its dead letter exchange to be the main exchange (topic_exchange above).
       #
       # This means that when a message send to the delayed queue is either nack'ed with no retry OR
-      # it's TTL expires, it will be sent to the configured dead letter exchange, which is the main topic_exchange.
+      # its TTL expires, it will be sent to the configured dead letter exchange, which is the main topic_exchange.
       #
       # Since nothing is actually consuming messages on the delayed queue, the only way messages can be removed and
       # sent back to the main exchange is if their TTL expires.  As you can see in Pwwka::Transmitter#send_delayed_message!
