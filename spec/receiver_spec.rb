@@ -25,6 +25,7 @@ describe Pwwka::Receiver do
 
     after(:each) do
       Pwwka.configuration.logger = @original_logger
+      Pwwka.configuration.requeue_on_error = false
       @receiver.test_teardown rescue nil
     end
 
@@ -51,6 +52,47 @@ describe Pwwka::Receiver do
       expect(logger).to have_received(:info).with(/END Transmitting.*#{Regexp.escape(payload.to_s)}/)
       expect(logger).to have_received(:info).with(/AFTER Transmitting.*#{Regexp.escape(payload.to_s)}/)
       expect(logger).to have_received(:error).with(/Error Processing Message.*#{Regexp.escape(payload.to_s)}.*#{Regexp.escape(exception.backtrace.join(';'))}/)
+    end
+
+    context "when we're configured to requeue on error" do
+      before do
+        Pwwka.configuration.requeue_on_error = true
+      end
+      it "should nack_requeue the sent message if it hasn't been retried before" do
+        exception = begin
+                      raise "blow up"
+                    rescue => ex
+                      ex
+                    end
+        expect(HandyHandler).to receive(:handle!).and_raise(ex)
+        expect(@receiver).not_to receive(:ack)
+        expect(@receiver).to receive(:nack_requeue).with(instance_of(Fixnum))
+        Pwwka::Transmitter.send_message!(payload, routing_key)
+        @receiver.test_teardown # force the message to be processed and exception handled
+        expect(logger).to have_received(:info).with(/START Transmitting.*#{Regexp.escape(payload.to_s)}/)
+        expect(logger).to have_received(:info).with(/END Transmitting.*#{Regexp.escape(payload.to_s)}/)
+        expect(logger).to have_received(:info).with(/AFTER Transmitting.*#{Regexp.escape(payload.to_s)}/)
+        expect(logger).to have_received(:error).with(/Error Processing Message.*#{Regexp.escape(payload.to_s)}.*#{Regexp.escape(exception.backtrace.join(';'))}/)
+      end
+
+      it "should nack the sent message if it HAS been retried before" do
+        # Super cheesy, but I don't see another way to access this
+        allow_any_instance_of(Bunny::DeliveryInfo).to receive(:redelivered).and_return(true)
+        exception = begin
+                      raise "blow up"
+                    rescue => ex
+                      ex
+                    end
+        expect(HandyHandler).to receive(:handle!).and_raise(ex)
+        expect(@receiver).not_to receive(:ack)
+        expect(@receiver).to receive(:nack).with(instance_of(Fixnum))
+        Pwwka::Transmitter.send_message!(payload, routing_key)
+        @receiver.test_teardown # force the message to be processed and exception handled
+        expect(logger).to have_received(:info).with(/START Transmitting.*#{Regexp.escape(payload.to_s)}/)
+        expect(logger).to have_received(:info).with(/END Transmitting.*#{Regexp.escape(payload.to_s)}/)
+        expect(logger).to have_received(:info).with(/AFTER Transmitting.*#{Regexp.escape(payload.to_s)}/)
+        expect(logger).to have_received(:error).with(/Error Processing Message.*#{Regexp.escape(payload.to_s)}.*#{Regexp.escape(exception.backtrace.join(';'))}/)
+      end
     end
 
   end
