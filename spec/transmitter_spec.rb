@@ -45,6 +45,12 @@ describe Pwwka::Transmitter do
         delivery_info = @test_handler.pop_message.delivery_info
         expect(delivery_info.routing_key).to eq(routing_key)
       end
+
+      it "sets the message_id property" do
+        Pwwka::Transmitter.new.send_message!(payload, routing_key)
+        message = @test_handler.pop_message
+        expect(message.properties[:message_id]).to match(/[A-Z0-9]{8}-([A-Z0-9]{4}-){3}[A-Z0-9]{12}/i)
+      end
     end
 
     it "should blow up if exception raised" do

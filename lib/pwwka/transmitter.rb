@@ -1,3 +1,5 @@
+require 'securerandom'
+
 begin  # optional dependency
   require 'resque'
 rescue LoadError
@@ -96,6 +98,7 @@ module Pwwka
       channel_connector.topic_exchange.publish(
           payload.to_json,
           routing_key: routing_key,
+          message_id: SecureRandom.uuid,
           persistent:  true)
       channel_connector.connection_close
       # if it gets this far it has succeeded
