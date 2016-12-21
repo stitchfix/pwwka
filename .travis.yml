@@ -3,7 +3,6 @@ sudo: true
 rvm:
   - 2.3.1
   - 2.2.4
-  - ruby-head
 services:
   - docker
 before_install:
