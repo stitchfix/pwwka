@@ -1,6 +1,6 @@
 require 'spec_helper.rb'
 
-describe Pwwka::Receiver do
+describe Pwwka::Receiver, :legacy do
 
   class HandyHandler
     def self.handle!(delivery_info, properties, payload)
@@ -18,6 +18,7 @@ describe Pwwka::Receiver do
     before(:each) do
       @original_logger = Pwwka.configuration.logger
       Pwwka.configuration.logger = logger
+      Pwwka.configuration.requeue_on_error = false
       allow(logger).to receive(:info)
       allow(logger).to receive(:error)
       @receiver = Pwwka::Receiver.subscribe(HandyHandler, "receiver_test", block: false)

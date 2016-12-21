@@ -8,31 +8,52 @@ Pronounced "Poo-ka" |ˈpo͞okə|
 ---
 [![Build Status](https://travis-ci.org/stitchfix/pwwka.svg?branch=add_travis_yml)](https://travis-ci.org/stitchfix/pwwka)
 
-This gem connects to a topic exchange on a RabbitMQ server. It gives any app using it the ability to do two things:
+Provides the means to both send and handle messages on an exchange of a RabbitMQ server.  In a sense, this provides the RabbitMQ equivalent
+of `Resque.enqueue` and `SomeResqueJob.perform`.
 
-* Transmit messages to the exchange
-* Receive messages from the exchange and tell the exchange whether or not the message has been acknowledged.
+## Set Up
 
-Any app can do one or both of these things.
+In your `Gemfile`:
 
-The basic principle of the Pwwka Message Bus is this:
+```ruby
+gem 'pwwka'
+```
 
-> The transmitter should send messages to inform anyone who listens that an event has occurred. It's up to the receiver to interpret the message.
+(of course, you can always run `gem install pwwka` to install it without Bundler)
 
-As an example:
+To run applications locally, you will need Rabbit installed.  The [installation guide](https://www.rabbitmq.com/download.html) is a great
+place to start.  This repo includes a `docker-compose.yml` file which will run Rabbit inside a Docker container.  It's used by the tests,
+but you can use that, too.
 
-* public-app sends a message that a new client has signed up
-* admin-app receives that message and updates its client index
-* email-app receives that message and sends a welcome email to the client
+### Configuration
 
-## Persistence
+Somewhere in your app, run the following code (in Rails, this would be `config/initializers/pwwka.rb`):
 
-All transmitters and receivers share the same exchange. This means that all receivers can read all messages that any transmitter sends. To ensure that all messages are received by eveyone who wants them the Pwwka message bus is configured as follows:
+```ruby
+require 'pwwka'
+Pwwka.configure do |config|
+  config.rabbit_mq_host        = ENV['RABBITMQ_URL']
+  config.topic_exchange_name   = "mycompany-topics-#{Rails.env}"
+  config.delayed_exchange_name = "mycompany-topics-#{Rails.env}"
+  config.options               = {allow_delayed: true}
+  config.requeue_on_error      = true
+end
+```
 
-* The exchange is named and durable. If the service goes down and restarts the named exchange will return with the same settings so everyone can reconnect.
-* The receiver queues are all named and durable. If the service goes down and restarts the named queue will return with the same settings so everyone can reconnect, and with any unacknowledged messages waiting to be received.
-* All messages are sent as persistent and require acknowledgement. They will stick around and wait to be received and acknowledged by every queue that wants them, regardless of service interruptions.
+Note that the absence of `RABBITMQ_URL` in your environment will cause the underlying RabbitMQ library to use the defaults.  If you aren't
+using the defaults, set that environment variable to something like this:
 
+```
+amqp://«user»:«password»@«host»:«port»/«vhost»
+```
+
+The defaults should be `amqp://guest:guest@localhost:5672/`, i.e.:
+
+* user: guest
+* password: guest
+* host: localhost
+* port: 5672
+* vhost: `/`
 
 ## Setting it up
 
@@ -52,24 +73,13 @@ Add to your `Gemfile`:
 gem 'pwwka'
 ```
 
+## Using Pwwka
 
-### Set up your pwwka configration
+Pwwka provides the ability to send a message into Rabbit as well a the ability to receive/handle a message.  Your app can do both of these
+things if it needs to.
 
-Connect to your RabbitMQ instance using the url and choose a name for your
-topic exchange.
 
-In `config/initializers/pwwka`:
-
-```ruby
-require 'pwwka'
-Pwwka.configure do |config|
-  config.rabbit_mq_host      = ENV['RABBITMQ_URL']
-  config.topic_exchange_name = "mycompany-topics-#{Rails.env}"
-  config.options             = {allow_delayed: true}
-end
-```
-
-## Sending a message
+### Sending a message
 
 You can send any kind of message using `Pwwka::Transmitter.send_message!`:
 
@@ -78,26 +88,17 @@ payload = {client_id: '13452564'}
 routing_key	= 'sf.clients.client.created'
 Pwwka::Transmitter.send_message!(payload, routing_key)
 ```
-The payload should be a simple hash containing primitives. Don't send objects because the payload will be converted to JSON for sending. This will blow up if an exception is raised. If you want the exception to be rescued and logged, use this instead:
+
+The payload should be a simple hash containing primitives. Don't send objects because the payload will be converted to JSON for sending.
+
+If an exception is raised sending your message, the bang form—`send_message!`—will pass that exception along to you and also blow up.  If
+you don't want that:
 
 ```ruby
 Pwwka::Transmitter.send_message_safely(payload, routing_key)
 ```
 
-You can also use the two convenience methods for sending a message. To include these methods 
-in your class use:
-
-```ruby
-include Pwwka::Handling
-```
-
-Then you can call:
-
-```ruby
-send_message!(payload, routing_key)
-```
-
-### Error Handling
+#### Error Handling
 
 This method accepts several strategies for handling errors, pass in using the `on_error` parameter:
 
@@ -105,7 +106,8 @@ This method accepts several strategies for handling errors, pass in using the `o
   * `:ignore`: Log the error and return false.
   * `:resque`: Log the error and return false. Also, enqueue a job with Resque to send the message. See `send_message_async` below. **Note, this doesn't guarantee the message will actually be sent—it just guarantees an attempt is made to queue a Resque job [which could fail]**
 
-### Delayed Messages
+#### Delayed Messages
+
 You might want to delay sending a message (for example, if you have just created a database 
 record and a race condition keeps catching you out). In that case you can use delayed message 
 options:
@@ -121,7 +123,7 @@ Pwwka::Transmitter.send_message!(payload, routing_key, delayed: true, delay_by: 
 These extra arguments work for all message sending methods - the safe ones, the handling, and the `message_queuer` methods (see below).
 
 
-### Sending message Async with Resque
+#### Sending message Async with Resque
 
 To enqueue a message in a background Resque job, use `Transmitter.send_message_async` 
 ```ruby
@@ -132,14 +134,14 @@ If `Resque::Plugins::ExponentialBackoff` is available, the job will use it.
 Customize the backoff intervals using the configuration `send_message_resque_backoff_strategy`.
 The default backoff will retry quickly in case of an intermittent glitch, and then every ten 
 minutes for half an hour.
- 
+
 The name of the queue created is `pwwka_send_message_async`.
 
+#### Message Queuer
 
-### Message Queuer
 You can queue up messages and send them in a batch. This is most useful when multiple messages 
 need to sent from within a transaction block.
-  
+
 For example:
 
 ```ruby
@@ -156,13 +158,15 @@ end
 message_queuer.send_messages_safely
 ```
 
-## Receiving messages
+### Receiving messages
 
-The message-handler comes with a rake task you can use in your Procfile to start up your message handler worker:
+The message-handler comes with a rake task you can use (e.g. in your Procfile) to start up your message handler worker:
 
 ```ruby
 message_handler: rake message_handler:receive HANDLER_KLASS=ClientIndexMessageHandler QUEUE_NAME=adminapp_style_index ROUTING_KEY='client.#.updated'
 ```
+
+It requires some environment variables to work:
 
 * `HANDLER_KLASS` (required) refers to the class you have to write in you app (equivalent to a `job` in Resque)
 * `QUEUE_NAME` (required) we must use named queues - see below
@@ -174,7 +178,7 @@ You'll also need to bring the Rake task into your app.  For Rails, you'll need t
 require 'pwwka/tasks'
 ```
 
-### Queues - what messages will your queue receive
+#### Queues - what messages will your queue receive
 
 It depends on your `routing_key`. If you set your routing key to `#.#` (the default) it will receive all the messages. The `#` is a wildcard so if you set it to `client.#` it will receive any message with `client.` at the beginning. The exchange registers the queue's name and routing key so it knows what messages the queue is supposed to receive. A named queue will receive each message it expects to get once and only once.
 
@@ -182,11 +186,11 @@ The available wildcards are as follows (and are not intuitive):
 * `*` (star) can substitute for **exactly one word**.
 * `#` (hash) can substitute for zero or more words.
 
-__A note on re-queuing:__ At the moment messages that raise an error on receipt are marked 'not acknowledged, don't resend', and the failure message is logged. All unacknowledged messages will be resent when the worker is restarted. The next iteration of this gem will allow for a specified number of resends without requiring a restart.
+__A note on re-queuing:__ At the moment messages that raise an error on receipt are marked 'not acknowledged, don't resend', and the failure message is logged. You can configure a single retry by setting the configuration option `requeue_on_error`.  Note that all unacknowledged messages will be resent when the worker is restarted.
 
 __Spinning up some more handlers to handle the load:__ Since each named queue will receive each message only once you can spin up multiple process using the *same named queue* and they will share the messages between them. If you spin up three processes each will receive roughly one third of the messages, but each message will still only be received once.
 
-### Handlers
+#### Handlers - The class that handles received messages
 
 Handlers are simple classes that must respond to `self.handle!`. The receiver will send the handler three arguments:
 
@@ -199,17 +203,13 @@ Here is an example:
 ```ruby
 class ClientIndexMessageHandler
   
-  def initialize(payload)
-    @payload = payload
-  end
-
   def self.handle!(delivery_info, properties, payload)
-    # for this handler we only care about the payload
-    handler = new(payload) 
-    handler.do_a_thing
+    handler.do_a_thing(payload)
   end
 
-  def do_a_thing
+private
+
+  def self.do_a_thing(payload)
     ###
     # some stuff that is being done
     ###
@@ -217,7 +217,8 @@ class ClientIndexMessageHandler
 
 end
 ```
-#### Handling Errors
+
+#### Errors From Your Handler
 
 By default, if your handler raises an uncaught exception, the message will be Nacked, **but not requeued**.  This means
 it's dropped on the floor and likely won't have been completely processed.
@@ -246,8 +247,7 @@ lead to filling up your queue. Nevertheless, this should address intermittent fa
 
 #### Handling Messages with Resque
 
-If you use [Resque][resque], and you wish to handle messages in a resque job, you can use `Pwwka::QueueResqueJobHandler`, which is an adapter between the
-standard `handle!` method provided by pwwka and your Resque job.
+If you use [Resque][resque], and you wish to handle messages in a resque job, you can use `Pwwka::QueueResqueJobHandler`, which is an adapter between the standard `handle!` method provided by pwwka and your Resque job.
 
 1. First, modify your `Gemfile` or otherwise arrange to include `pwwka/queue_resque_job_handler`:
 
@@ -262,7 +262,7 @@ standard `handle!` method provided by pwwka and your Resque job.
    ```
 
 2. Now, configure your handler.  For a `Procfile` setup:
-   
+
    ```
    my_handler: rake message_handler:receive HANDLER_KLASS=Pwwka::QueueResqueJobHandler JOB_KLASS=MyResqueJob QUEUE_NAME=my_queue ROUTING_KEY="my.key.completed"
    ```
@@ -288,42 +288,7 @@ standard `handle!` method provided by pwwka and your Resque job.
 
 [resque]: https://github.com/resque/resque/tree/1-x-stable
 
-
-## Monitoring
-
-RabbitMQ has a good API that should make it easy to set up some simple monitoring. In the meantime there is logging and manual monitoring.
-
-### Logging
-
-The receiver logs details of any exception raised in message handling:
-
-```ruby
-error "Error Processing Message on #{queue_name} -> #{payload}, #{delivery_info.routing_key}: #{e}"
-```
-
-The transmitter will likewise log an error if you use the `_safely` methods:
-
-```ruby
-error "Error Transmitting Message on #{routing_key} -> #{payload}: #{e}"
-```
-
-If your payloads are large, you may not want to log them 2-3 times per message.  In that case, you can adjust `payload_logging` in the configuration:
-
-```ruby
-Pwwka.configuration.payload_logging = :info # The default - payloads appear at INFO and above log levels
-Pwwka.configuration.payload_logging = :error # Only log payloads for ERROR or FATAL messages
-Pwwka.configuration.payload_logging = :fatal # Only log payloads for FATAL messages
-```
-
-### Manual monitoring
-
-RabbitMQ has a web interface for checking out the health of connections, channels, exchanges and queues. Access it via the Heroku add-ons page for Enigma.
-
-![RabbitMQ Management 1](docs/images/RabbitMQ_Management.png)
-![RabbitMQ Management 2](docs/images/RabbitMQ_Management-2.png)
-![RabbitMQ Management 3](docs/images/RabbitMQ_Management-3.png)
-
-## Testing
+### Testing
 
 This gem has test coverage of interacting with RabbitMQ, so for unit tests, your best
 strategy is to simply mock calls to `Pwwka::Transmitter`.
@@ -366,11 +331,62 @@ describe "my integration test" do
 end
 ```
 
-The pwwka gem has tests for all its functionality, so testing your app is best done with mocks on this gem. 
-
-However, if you want to test the message bus end-to-end in your app you can use some helpers in `lib/pwwka/test_handler.rb`. See this gem's specs for examples of how to use them.
-
 [See CONTRIBUTING.md for details on testing this gem](CONTRIBUTING.md#testing)
+
+
+## Better Know a Message Bus
+
+If you aren't familiar with Rabbit or Message Busses, the idea is that messages can be sent “into the ether” with no particular
+destination.  Subscribers can listen for those messages and choose to respond.
+
+For example, suppose a customer purchases an order.  The app serving our public website sends a message that this has happened.  Another
+app that sends emails will hear that message, and use it to trigger a receipt email to the customer.  A yet other app that does financial
+reporting might hear this same message and record the sale to the company's ledger.  The app serving our public website doesn't know about
+any of these things.
+
+### How Pwwka Uses Rabbit
+
+All transmitters and receivers share the same exchange. This means that all receivers can read all messages that any transmitter sends. To ensure that all messages are received by eveyone who wants them the Pwwka configures everything as follows:
+
+* The exchange is named and durable. If the service goes down and restarts the named exchange will return with the same settings so everyone can reconnect.
+* The receiver queues are all named and durable. If the service goes down and restarts the named queue will return with the same settings so everyone can reconnect, and with any unacknowledged messages waiting to be received.
+* All messages are sent as persistent and require acknowledgement. They will stick around and wait to be received and acknowledged by every queue that wants them, regardless of service interruptions.
+
+
+### Monitoring
+
+RabbitMQ has a good API that should make it easy to set up some simple monitoring. In the meantime there is logging and manual monitoring.
+
+#### Logging
+
+The receiver logs details of any exception raised in message handling:
+
+```ruby
+error "Error Processing Message on #{queue_name} -> #{payload}, #{delivery_info.routing_key}: #{e}"
+```
+
+The transmitter will likewise log an error if you use the `_safely` methods:
+
+```ruby
+error "Error Transmitting Message on #{routing_key} -> #{payload}: #{e}"
+```
+
+If your payloads are large, you may not want to log them 2-3 times per message.  In that case, you can adjust `payload_logging` in the configuration:
+
+```ruby
+Pwwka.configuration.payload_logging = :info # The default - payloads appear at INFO and above log levels
+Pwwka.configuration.payload_logging = :error # Only log payloads for ERROR or FATAL messages
+Pwwka.configuration.payload_logging = :fatal # Only log payloads for FATAL messages
+```
+
+#### Manual monitoring
+
+RabbitMQ has a web interface for checking out the health of connections, channels, exchanges and queues. Your RabbitMQ provider should
+provide a link.  If you are running Rabbit locally, the management interface is on port 15672 by default (or port 10002 if using the included `docker-compose.yml`).  The user is "guest" and the password is "guest".
+
+![RabbitMQ Management 1](docs/images/RabbitMQ_Management.png)
+![RabbitMQ Management 2](docs/images/RabbitMQ_Management-2.png)
+![RabbitMQ Management 3](docs/images/RabbitMQ_Management-3.png)
 
 ## Contributing
 

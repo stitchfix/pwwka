@@ -1,0 +1,11 @@
+version: '2'
+services:
+  rabbit:
+    image: rabbitmq:3.5.6-management
+    ports:
+      - "10001:5672"
+      - "10002:15672"
+  resque:
+    image: redis:2.8.12
+    ports:
+      - "10003:6379"

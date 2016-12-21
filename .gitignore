@@ -11,3 +11,4 @@ db
 **.orig
 .rspec
 .bundle
+coverage
