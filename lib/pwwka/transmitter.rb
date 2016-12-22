@@ -1,5 +1,6 @@
 begin  # optional dependency
   require 'resque'
+  require 'resque-retry'
 rescue LoadError
 end
 

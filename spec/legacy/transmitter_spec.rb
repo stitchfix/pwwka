@@ -1,6 +1,6 @@
 require 'spec_helper.rb'
 
-describe Pwwka::Transmitter do
+describe Pwwka::Transmitter, :legacy do
 
   before(:all) do
     @test_handler = Pwwka::TestHandler.new

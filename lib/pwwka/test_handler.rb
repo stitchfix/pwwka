@@ -8,6 +8,7 @@ module Pwwka
   # 2. Arrange for `test_teardown` to be called during teardown of your tests
   # 3. Use the method `pop_message` to examine the message on the queue
   class TestHandler
+    include Pwwka::Logging
 
     attr_reader :channel_connector
 

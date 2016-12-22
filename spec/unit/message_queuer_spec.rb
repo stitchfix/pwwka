@@ -33,8 +33,8 @@ describe Pwwka::MessageQueuer do
   describe "#send_messages_safely" do
 
     it "should send the queued messages" do
-      expect(message_queuer_with_messages).to receive(:send_message_safely).with(payload1, routing_key1).and_call_original
-      expect(message_queuer_with_messages).to receive(:send_message_safely).with(payload2, routing_key2, delayed: true, delay_by: 3500).and_call_original
+      expect(message_queuer_with_messages).to receive(:send_message_safely).with(payload1, routing_key1)
+      expect(message_queuer_with_messages).to receive(:send_message_safely).with(payload2, routing_key2, delayed: true, delay_by: 3500)
       message_queuer_with_messages.send_messages_safely
       expect(message_queuer_with_messages.message_queue).to eq([])
     end
@@ -44,8 +44,8 @@ describe Pwwka::MessageQueuer do
   describe "#send_messages!" do
 
     it "should send the queued messages" do
-      expect(message_queuer_with_messages).to receive(:send_message!).with(payload1, routing_key1).and_call_original
-      expect(message_queuer_with_messages).to receive(:send_message!).with(payload2, routing_key2, delayed: true, delay_by: 3500).and_call_original
+      expect(message_queuer_with_messages).to receive(:send_message!).with(payload1, routing_key1)
+      expect(message_queuer_with_messages).to receive(:send_message!).with(payload2, routing_key2, delayed: true, delay_by: 3500)
       message_queuer_with_messages.send_messages!
       expect(message_queuer_with_messages.message_queue).to eq([])
     end

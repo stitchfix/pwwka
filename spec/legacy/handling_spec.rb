@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe Pwwka::Handling do
+describe Pwwka::Handling, :legacy do
 
   class HKlass
     include Pwwka::Handling
