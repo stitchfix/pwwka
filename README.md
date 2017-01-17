@@ -91,28 +91,23 @@ Pwwka::Transmitter.send_message!(payload, routing_key)
 
 The payload should be a simple hash containing primitives. Don't send objects because the payload will be converted to JSON for sending.
 
-Error handling can be configured by passing one of:
-
-```text
-  on_error: :raise (default)
-  on_error: :ignore
-  on_error: :resque
-```
-
-to `Pwwka::Transmitter.send_message!` (see "Error Handling", below). For example:
-
-```ruby
-Pwwka::Transmitter.send_message!(payload, routing_key, on_error: :ignore)
-```
-
 
 #### Error Handling
 
-This method accepts several strategies for handling errors, passed in using the `on_error` parameter:
+`Pwwka::Transmitter.send_message!` accepts several strategies for handling errors, passed in using the `on_error` parameter:
 
-  * `:raise`: Log the error and raise the exception received from Bunny. (default strategy)
-  * `:ignore`: Log the error and return false.
-  * `:resque`: Log the error and return false. Also, enqueue a job with Resque to send the message. See `send_message_async` below. **Note, this doesn't guarantee the message will actually be sent—it just guarantees an attempt is made to queue a Resque job [which could fail]**
+  * `:raise` - Log the error and raise the exception received from Bunny. (default strategy)
+  * `:ignore` - Log the error and return false.
+  * `:resque` - Log the error and return false. Also, enqueue a job with Resque to send the message. See `send_message_async` below. **Note, this doesn't guarantee the message will actually be sent—it just guarantees an attempt is made to queue a Resque job [which could fail]**
+
+Example usage:
+
+```ruby
+payload = {client_id: '13452564'}
+routing_key	= 'sf.clients.client.created'
+Pwwka::Transmitter.send_message!(payload, routing_key, on_error: :ignore)
+```
+
 
 #### Delayed Messages
 
