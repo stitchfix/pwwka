@@ -91,16 +91,24 @@ Pwwka::Transmitter.send_message!(payload, routing_key)
 
 The payload should be a simple hash containing primitives. Don't send objects because the payload will be converted to JSON for sending.
 
-If an exception is raised sending your message, the bang form—`send_message!`—will pass that exception along to you and also blow up.  If
-you don't want that:
+Error handling can be configured by passing one of:
+
+```text
+  on_error: :raise (default)
+  on_error: :ignore
+  on_error: :resque
+```
+
+to `Pwwka::Transmitter.send_message!` (see "Error Handling", below). For example:
 
 ```ruby
-Pwwka::Transmitter.send_message_safely(payload, routing_key)
+Pwwka::Transmitter.send_message!(payload, routing_key, on_error: :ignore)
 ```
+
 
 #### Error Handling
 
-This method accepts several strategies for handling errors, pass in using the `on_error` parameter:
+This method accepts several strategies for handling errors, passed in using the `on_error` parameter:
 
   * `:raise`: Log the error and raise the exception received from Bunny. (default strategy)
   * `:ignore`: Log the error and return false.
@@ -168,7 +176,7 @@ message_handler: rake message_handler:receive HANDLER_KLASS=ClientIndexMessageHa
 
 It requires some environment variables to work:
 
-* `HANDLER_KLASS` (required) refers to the class you have to write in you app (equivalent to a `job` in Resque)
+* `HANDLER_KLASS` (required) refers to the class you have to write in your app (equivalent to a `job` in Resque)
 * `QUEUE_NAME` (required) we must use named queues - see below
 * `ROUTING_KEY` (optional) defaults to `#.#` (all messages)
 
