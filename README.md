@@ -91,20 +91,23 @@ Pwwka::Transmitter.send_message!(payload, routing_key)
 
 The payload should be a simple hash containing primitives. Don't send objects because the payload will be converted to JSON for sending.
 
-If an exception is raised sending your message, the bang form—`send_message!`—will pass that exception along to you and also blow up.  If
-you don't want that:
-
-```ruby
-Pwwka::Transmitter.send_message_safely(payload, routing_key)
-```
 
 #### Error Handling
 
-This method accepts several strategies for handling errors, pass in using the `on_error` parameter:
+`Pwwka::Transmitter.send_message!` accepts several strategies for handling errors, passed in using the `on_error` parameter:
 
-  * `:raise`: Log the error and raise the exception received from Bunny. (default strategy)
-  * `:ignore`: Log the error and return false.
-  * `:resque`: Log the error and return false. Also, enqueue a job with Resque to send the message. See `send_message_async` below. **Note, this doesn't guarantee the message will actually be sent—it just guarantees an attempt is made to queue a Resque job [which could fail]**
+  * `:raise` - Log the error and raise the exception received from Bunny. (default strategy)
+  * `:ignore` - Log the error and return false.
+  * `:resque` - Log the error and return false. Also, enqueue a job with Resque to send the message. See `send_message_async` below. **Note, this doesn't guarantee the message will actually be sent—it just guarantees an attempt is made to queue a Resque job [which could fail]**
+
+Example usage:
+
+```ruby
+payload = {client_id: '13452564'}
+routing_key	= 'sf.clients.client.created'
+Pwwka::Transmitter.send_message!(payload, routing_key, on_error: :ignore)
+```
+
 
 #### Delayed Messages
 
@@ -168,7 +171,7 @@ message_handler: rake message_handler:receive HANDLER_KLASS=ClientIndexMessageHa
 
 It requires some environment variables to work:
 
-* `HANDLER_KLASS` (required) refers to the class you have to write in you app (equivalent to a `job` in Resque)
+* `HANDLER_KLASS` (required) refers to the class you have to write in your app (equivalent to a `job` in Resque)
 * `QUEUE_NAME` (required) we must use named queues - see below
 * `ROUTING_KEY` (optional) defaults to `#.#` (all messages)
 
