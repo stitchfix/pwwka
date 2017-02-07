@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pwwka (0.8.0)
+    pwwka (0.9.0.RC1)
       activemodel
       activesupport
       bunny
@@ -10,20 +10,20 @@ PATH
 GEM
   remote: https://www.rubygems.org/
   specs:
-    activemodel (5.0.0.1)
-      activesupport (= 5.0.0.1)
-    activesupport (5.0.0.1)
+    activemodel (5.0.1)
+      activesupport (= 5.0.1)
+    activesupport (5.0.1)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (~> 0.7)
       minitest (~> 5.1)
       tzinfo (~> 1.1)
     amq-protocol (2.0.1)
-    bunny (2.6.1)
+    bunny (2.6.2)
       amq-protocol (>= 2.0.1)
-    concurrent-ruby (1.0.2)
+    concurrent-ruby (1.0.4)
     diff-lcs (1.2.5)
     docile (1.1.5)
-    i18n (0.7.0)
+    i18n (0.8.0)
     json (1.8.3)
     minitest (5.10.1)
     mono_logger (1.1.0)
