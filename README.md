@@ -223,30 +223,27 @@ end
 
 #### Errors From Your Handler
 
-By default, if your handler raises an uncaught exception, the message will be Nacked, **but not requeued**.  This means
-it's dropped on the floor and likely won't have been completely processed.
+By default, all unhandled errors will crash your handler.  This is good, because it allows you to recover from most intermittent things.  Just be aware of this when configuring your handler so that it gets
+restarted after a crash.
 
-You can configure `requeue_on_error` in the configuration to change this behavior:
+What happens to the message you received during the error depends:
 
-```ruby
-require 'pwwka'
-Pwwka.configure do |config|
+* If the error is not a `StandardError` or a subclass, the message will not be ack'ed and will be waiting on the queue for you when you next fetch a message
+* If the errors *is* a `StandardError` or a subclass, the message will be ack'ed and removed from the queue.
+  - By default, the message is not re-queued and is essentially dropped on the floor.  Its payload is logged, so you can recover that way.
+  - If you set `requeue_on_error = true` in your Pwwka configuration, a message gets requeued **exactly once** on failure.  If the message involved in the failure has been redelivered before, it's dropped on the floor.  This behavior allows you to recover from most intermittent failures, like so:
+    1. You receive message for the first time.
+    1. Intermittent failure (e.g. network problem) happens, and an exception is raised.
+    1. Pwwka catches this exception and requeues the message.
+    1. Pwwka then crashes your handler.
+    1. Your handler restarts.
+    1. The message is in the queue, waiting for you.
+    1. You handle it. (*if you error here, the message is not requeued*)
 
-  # ...
+The reason we don't always requeue on error is that a hard failure would result in an infinite loop.  The reason we don't use the dead letter exchange is that there is no way in the Rabbit console to deal with
+these messages.  Some day Pwwka might have code to allow that.  Today is not that day.
 
-  config.requeue_on_error = true
-end
-```
-
-This will requeue the message **exactly once**.  It uses the headers to check if the message has been retried.  If it
-hasn't, and your handler raises an exception, it will be placed back on the queue.  The second time your handler
-processes it, there is a header indicating it's been retried, so if a failure happens again, the message **is not
-requeued**.
-
-Because requeuing puts the message at the head of the queue, a hard failure will result in an infinite loop, which will
-lead to filling up your queue. Nevertheless, this should address intermittent failures.
-
-**It is recommended that you set this option**.  It's off for backwards compatibility.
+**You should configure `requeue_on_error`**. It's not the default for backwards compatibility.
 
 #### Handling Messages with Resque
 

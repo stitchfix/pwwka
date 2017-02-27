@@ -11,6 +11,7 @@ module Pwwka
     attr_accessor :options
     attr_accessor :send_message_resque_backoff_strategy
     attr_accessor :requeue_on_error
+    attr_writer   :keep_alive_on_handler_klass_exceptions
 
     def initialize
       @rabbit_mq_host        = nil
@@ -22,6 +23,11 @@ module Pwwka
                                                60,                 # quick interruption
                                                600, 600, 600] # longer-term outage?
       @requeue_on_error = false
+      @keep_alive_on_handler_klass_exceptions = false
+    end
+
+    def keep_alive_on_handler_klass_exceptions?
+      @keep_alive_on_handler_klass_exceptions
     end
 
     def payload_logging

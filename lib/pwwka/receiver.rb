@@ -29,12 +29,21 @@ module Pwwka
             receiver.ack(delivery_info.delivery_tag)
             logf "Processed Message on %{queue_name} -> %{payload}, %{routing_key}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key
           rescue => e
+            error_options = {
+               queue_name: queue_name,
+                  payload: payload,
+              routing_key: delivery_info.routing_key,
+                exception: e
+            }
             if Pwwka.configuration.requeue_on_error && !delivery_info.redelivered
-              logf "Retrying an Error Processing Message on %{queue_name} -> %{payload}, %{routing_key}: %{exception}: %{backtrace}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key, exception: e, backtrace: e.backtrace.join(';'), at: :error
+              log_error "Retrying an Error Processing Message", error_options
               receiver.nack_requeue(delivery_info.delivery_tag)
             else
-              logf "Error Processing Message on %{queue_name} -> %{payload}, %{routing_key}: %{exception}: %{backtrace}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key, exception: e, backtrace: e.backtrace.join(';'), at: :error
+              log_error "Error Processing Message", error_options
               receiver.nack(delivery_info.delivery_tag)
+            end
+            unless Pwwka.configuration.keep_alive_on_handler_klass_exceptions?
+              raise Interrupt,"Exiting due to exception #{e.inspect}"
             end
           end
         end
@@ -75,6 +84,14 @@ module Pwwka
       drop_queue
       topic_exchange.delete
       channel_connector.connection_close
+    end
+
+  private
+
+    def self.log_error(message,options)
+      options[:message] = message
+      options[:backtrace] = options.fetch(:exception).backtrace.join(';')
+      logf "%{message} on %{queue_name} -> %{payload}, %{routing_key}: %{exception}: %{backtrace}", options
     end
 
   end

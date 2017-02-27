@@ -1,6 +1,6 @@
 class LoggingReceiver
   def self.reset!; @messages_received = []; end
-  def self.messages_received; @messages_received; end
+  def self.messages_received; @messages_received ||= []; end
 
   reset!
 
