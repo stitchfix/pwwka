@@ -133,12 +133,20 @@ To enqueue a message in a background Resque job, use `Transmitter.send_message_a
 Pwwka::Transmitter.send_message_async(payload, routing_key, delay_by_ms: 5000) # default delay is 0
 ```
 
-If `Resque::Plugins::ExponentialBackoff` is available, the job will use it.
+If `Resque::Plugins::ExponentialBackoff` is available, the job will use it. (Important: Your load/require order is important if you want exponential backoff with the built-in job due [its error handling](https://github.com/stitchfix/pwwka/blob/713c6003fa6cf52cb4713c02b39fe7ee07ebe2e9/lib/pwwka/send_message_async_job.rb#L8).)
 Customize the backoff intervals using the configuration `send_message_resque_backoff_strategy`.
 The default backoff will retry quickly in case of an intermittent glitch, and then every ten 
 minutes for half an hour.
 
 The name of the queue created is `pwwka_send_message_async`.
+
+You can configure Pwwka to use your own custom job using the `async_job_klass` configuration option. Example might be:
+
+```
+Pwwka.configure do |config|
+  config.async_job_klass = YourApp::PwwkaAsyncJob
+end
+```
 
 #### Message Queuer
 
