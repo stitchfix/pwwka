@@ -75,7 +75,7 @@ module Pwwka
     # Use Resque to enqueue the message.
     # - :delay_by_ms:: Integer milliseconds to delay the message. Default is 0.
     def self.send_message_async(payload, routing_key, delay_by_ms: 0)
-      job = Pwwka.configuration.send_message_async_job
+      job = Pwwka.configuration.async_job_klass
       Resque.enqueue_in(delay_by_ms/1000, job, payload, routing_key)
     end
 
