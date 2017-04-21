@@ -89,6 +89,21 @@ describe "sending and receiving messages", :integration do
     expect(AllReceiver.messages_received.size).to eq(1)
   end
 
+  it "can queue a job to send a message to a specified Resque job queue" do
+    async_job_klass = double(:async_job_klass)
+    configuration = Pwwka::Configuration.new
+    configuration.async_job_klass = async_job_klass
+
+    allow(Pwwka).to receive(:configuration).and_return(configuration)
+
+    allow(Resque).to receive(:enqueue_in)
+
+    Pwwka::Transmitter.send_message_async({ sample: "payload", has: { deeply: true, nested: 4 }},
+                                          "pwwka.testing.bar")
+
+    expect(Resque).to have_received(:enqueue_in).with(anything, async_job_klass, anything, anything)
+  end
+
   class AllReceiver < LoggingReceiver
   end
   class FooReceiver < AllReceiver

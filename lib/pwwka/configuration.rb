@@ -9,6 +9,7 @@ module Pwwka
     attr_accessor :delayed_exchange_name
     attr_accessor :logger
     attr_accessor :options
+    attr_accessor :async_job_klass
     attr_accessor :send_message_resque_backoff_strategy
     attr_accessor :requeue_on_error
     attr_writer   :keep_alive_on_handler_klass_exceptions
@@ -24,6 +25,7 @@ module Pwwka
                                                600, 600, 600] # longer-term outage?
       @requeue_on_error = false
       @keep_alive_on_handler_klass_exceptions = false
+      @async_job_klass = Pwwka::SendMessageAsyncJob
     end
 
     def keep_alive_on_handler_klass_exceptions?
