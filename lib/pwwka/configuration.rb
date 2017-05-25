@@ -12,6 +12,7 @@ module Pwwka
     attr_accessor :async_job_klass
     attr_accessor :send_message_resque_backoff_strategy
     attr_accessor :requeue_on_error
+    attr_writer   :app_id
     attr_writer   :keep_alive_on_handler_klass_exceptions
 
     def initialize
@@ -30,6 +31,22 @@ module Pwwka
 
     def keep_alive_on_handler_klass_exceptions?
       @keep_alive_on_handler_klass_exceptions
+    end
+
+    def app_id
+      if @app_id.to_s.strip == ""
+        if defined?(Rails)
+          if Rails.respond_to?(:application)
+            Rails.application.class.parent.name
+          else
+            raise "'Rails' is defined, but it doesn't respond to #application, so could not derive the app_id; you must explicitly set it"
+          end
+        else
+          raise "Could not derive the app_id; you must explicitly set it"
+        end
+      else
+        @app_id
+      end
     end
 
     def payload_logging

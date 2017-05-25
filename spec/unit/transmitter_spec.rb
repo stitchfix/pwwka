@@ -36,18 +36,46 @@ describe Pwwka::Transmitter do
     before do
       allow(Resque).to receive(:enqueue_in)
     end
-
-    it "queues a Resque job" do
-      delay_by_ms = 3_000
-      described_class.send_message_async(payload,routing_key,delay_by_ms: delay_by_ms)
-      expect(Resque).to have_received(:enqueue_in).with(delay_by_ms/1_000,Pwwka::SendMessageAsyncJob,payload,routing_key)
+    context "with only basic required arguments" do
+      it "queues a Resque job with no extra args" do
+        delay_by_ms = 3_000
+        described_class.send_message_async(payload,routing_key,delay_by_ms: delay_by_ms)
+        expect(Resque).to have_received(:enqueue_in).with(delay_by_ms/1_000,Pwwka::SendMessageAsyncJob,payload,routing_key)
+      end
+    end
+    context "with everything overridden" do
+      it "queues a Resque job with the various arguments" do
+        delay_by_ms = 3_000
+        described_class.send_message_async(
+          payload,routing_key,
+          delay_by_ms: delay_by_ms,
+          message_id: "snowflake id that is likely a bad idea, but if you must",
+          type: "Customer",
+          headers: {
+            "custom" => "value",
+            "other_custom" => "other_value",
+          }
+        )
+        expect(Resque).to have_received(:enqueue_in).with(
+          delay_by_ms/1_000,
+          Pwwka::SendMessageAsyncJob,
+          payload,
+          routing_key,
+          message_id: "snowflake id that is likely a bad idea, but if you must",
+          type: "Customer",
+          headers: {
+            "custom" => "value",
+            "other_custom" => "other_value",
+          }
+        )
+      end
     end
   end
 
   shared_examples "it passes through to an instance" do
     context "not using delayed flag" do
       it "calls through to send_message!" do
-        expect_any_instance_of(described_class).to receive(:send_message!).with(payload,routing_key)
+        expect_any_instance_of(described_class).to receive(:send_message!).with(payload,routing_key, type: nil, headers: nil, message_id: :auto_generate)
         described_class.send(method,payload,routing_key)
       end
       it "logs after sending" do
@@ -66,18 +94,139 @@ describe Pwwka::Transmitter do
       context "explicitly setting delay time" do
         it "calls through to send_delayed_message! using the given delay time" do
           delay_by = 1_000
-          expect_any_instance_of(described_class).to receive(:send_delayed_message!).with(payload,routing_key,delay_by)
+          expect_any_instance_of(described_class).to receive(:send_delayed_message!).with(payload,routing_key,delay_by, type: nil, headers: nil, message_id: :auto_generate)
           described_class.send(method,payload,routing_key,delayed: true, delay_by: delay_by)
         end
       end
       context "using the default delay time" do
         it "calls through to send_delayed_message! using its default delay time" do
-          expect_any_instance_of(described_class).to receive(:send_delayed_message!).with(payload,routing_key)
+          expect_any_instance_of(described_class).to receive(:send_delayed_message!).with(payload,routing_key, type: nil, headers: nil, message_id: :auto_generate)
           described_class.send(method,payload,routing_key,delayed: true)
         end
       end
     end
   end
+
+  shared_examples "it sends standard and overridden data to the exchange" do
+    it "publishes to the topic exchange" do
+      expect(exchange).to have_received(:publish).with(payload.to_json, kind_of(Hash))
+    end
+
+    it "passes the routing key" do
+      expect(exchange).to have_received(:publish).with(
+        payload.to_json,
+        hash_including(routing_key: routing_key))
+    end
+
+    it "sets the type" do
+      expect(exchange).to have_received(:publish).with(
+        payload.to_json,
+        hash_including(type: "Customer"))
+    end
+
+    it "sets the headers" do
+      expect(exchange).to have_received(:publish).with(
+        payload.to_json,
+        hash_including(headers: { "custom" => "value", "other_custom" => "other_value" }))
+    end
+
+    it "uses the overridden message id" do
+      expect(exchange).to have_received(:publish).with(
+        payload.to_json,
+        hash_including(message_id: "snowflake id that is likely a bad idea, but if you must"))
+    end
+
+    it "sets the timestamp to now" do
+      expect(exchange).to have_received(:publish).with(
+        payload.to_json,
+        hash_including(timestamp: a_timestamp_about_now))
+    end
+
+    it "sets the app id to what's configured" do
+      expect(exchange).to have_received(:publish).with(
+        payload.to_json,
+        hash_including(app_id: "MyAwesomeApp"))
+    end
+
+    it "sets the content type to JSON with a version" do
+      expect(exchange).to have_received(:publish).with(
+        payload.to_json,
+        hash_including(content_type: "application/json; version=1"))
+    end
+
+    it "sets persistent true" do
+      expect(exchange).to have_received(:publish).with(
+        payload.to_json,
+        hash_including(persistent: true))
+    end
+  end
+
+  shared_examples "it sends standard attributes and the payload to the exchange" do
+    it "publishes to the topic exchange" do
+      expect(exchange).to have_received(:publish).with(payload.to_json, kind_of(Hash))
+    end
+
+    it "passes the routing key" do
+      expect(exchange).to have_received(:publish).with(
+        payload.to_json,
+        hash_including(routing_key: routing_key))
+    end
+
+    it "sets a default message id" do
+      expect(exchange).to have_received(:publish).with(
+        payload.to_json,
+        hash_including(message_id: a_uuid))
+    end
+
+    it "sets the timestamp to now" do
+      expect(exchange).to have_received(:publish).with(
+        payload.to_json,
+        hash_including(timestamp: a_timestamp_about_now))
+    end
+
+    it "sets the app id to what's configured" do
+      expect(exchange).to have_received(:publish).with(
+        payload.to_json,
+        hash_including(app_id: "MyAwesomeApp"))
+    end
+
+    it "sets the content type to JSON with a version" do
+      expect(exchange).to have_received(:publish).with(
+        payload.to_json,
+        hash_including(content_type: "application/json; version=1"))
+    end
+
+    it "sets persistent true" do
+      expect(exchange).to have_received(:publish).with(
+        payload.to_json,
+        hash_including(persistent: true))
+    end
+
+    it "does not set the type" do
+      expect(exchange).to have_received(:publish).with(
+        payload.to_json,
+        hash_excluding(:type))
+    end
+
+    it "does not set headers" do
+      expect(exchange).to have_received(:publish).with(
+        payload.to_json,
+        hash_excluding(:headers))
+    end
+  end
+
+  RSpec::Matchers.define :a_uuid do |x|
+    match { |actual|
+      actual =~ /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+    }
+  end
+
+  RSpec::Matchers.define :a_timestamp_about_now do |x|
+    match { |actual|
+      (actual - Time.now.to_i).abs < 1000
+    }
+  end
+
 
   describe ".send_message!" do
     context "no errors" do
@@ -165,20 +314,44 @@ describe Pwwka::Transmitter do
       expect(transmitter.send_message!(payload,routing_key)).to eq(true)
     end
 
-    it "publishes the message" do
-      transmitter.send_message!(payload,routing_key)
-      expect(topic_exchange).to have_received(:publish).with(payload.to_json,routing_key: routing_key, persistent: true)
-    end
-
     it "logs the start and end of the transmission" do
       transmitter.send_message!(payload,routing_key)
-      expect(logger).to have_received(:info).with(/START Transmitting Message on #{routing_key} ->/)
-      expect(logger).to have_received(:info).with(/END Transmitting Message on #{routing_key} ->/)
+      expect(logger).to have_received(:info).with(/START Transmitting Message on id\[[\w\-\d]+\] #{routing_key} ->/)
+      expect(logger).to have_received(:info).with(/END Transmitting Message on id\[[\w\-\d]+\] #{routing_key} ->/)
     end
 
     it "closes the channel connector" do
       transmitter.send_message!(payload,routing_key)
       expect(channel_connector).to have_received(:connection_close)
+    end
+
+    context "with only basic required arguments" do
+
+      before do
+        transmitter.send_message!(payload,routing_key)
+      end
+
+      it_behaves_like "it sends standard attributes and the payload to the exchange" do
+        let(:exchange) { topic_exchange }
+      end
+    end
+    context "with everything overridden" do
+      before do
+        transmitter.send_message!(
+          payload,
+          routing_key,
+          message_id: "snowflake id that is likely a bad idea, but if you must",
+          type: "Customer",
+          headers: {
+            "custom" => "value",
+            "other_custom" => "other_value",
+          }
+        )
+      end
+
+      it_behaves_like "it sends standard and overridden data to the exchange" do
+        let(:exchange) { topic_exchange }
+      end
     end
   end
 
@@ -189,29 +362,44 @@ describe Pwwka::Transmitter do
         allow(channel_connector).to receive(:create_delayed_queue)
       end
 
-      it "returns true" do
-        expect(transmitter.send_delayed_message!(payload,routing_key)).to eq(true)
-      end
-
       it "creates the delayed queue" do
         transmitter.send_delayed_message!(payload,routing_key)
         expect(channel_connector).to have_received(:create_delayed_queue)
       end
 
-      it "publishes the message to the delayed exchange" do
-        delay_by = 12345
-        transmitter.send_delayed_message!(payload,routing_key, delay_by)
-        expect(delayed_exchange).to have_received(:publish).with(payload.to_json,routing_key: routing_key, expiration: delay_by, persistent: true)
+      context "with only basic required arguments" do
+        before do
+          transmitter.send_delayed_message!(payload,routing_key,5_000)
+        end
+
+        it_behaves_like "it sends standard attributes and the payload to the exchange" do
+          let(:exchange) { delayed_exchange }
+        end
+
+        it "passes an expiration value" do
+          expect(delayed_exchange).to have_received(:publish).with(
+            payload.to_json,
+            hash_including(expiration: 5_000))
+        end
       end
 
-      it "logs the start and end of the transmission" do
-        transmitter.send_delayed_message!(payload,routing_key)
-        expect(logger).to have_received(:info).with(/START Transmitting Delayed Message on #{routing_key} ->/)
-        expect(logger).to have_received(:info).with(/END Transmitting Delayed Message on #{routing_key} ->/)
-      end
-      it "closes the channel connector" do
-        transmitter.send_delayed_message!(payload,routing_key)
-        expect(channel_connector).to have_received(:connection_close)
+      context "with everything overridden" do
+        before do
+          transmitter.send_delayed_message!(
+            payload,
+            routing_key,
+            message_id: "snowflake id that is likely a bad idea, but if you must",
+            type: "Customer",
+            headers: {
+              "custom" => "value",
+              "other_custom" => "other_value",
+            }
+          )
+        end
+
+        it_behaves_like "it sends standard and overridden data to the exchange" do
+          let(:exchange) { delayed_exchange }
+        end
       end
     end
     context "delayed queue not configured" do
