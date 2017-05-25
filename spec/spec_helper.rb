@@ -41,7 +41,16 @@ RSpec.configure do |config|
     end
     Resque.redis = Redis.new(port: test_configuration.resque_redis_port)
   end
-
+  config.around(:each) do |example|
+    if example.metadata[:integration]
+      result = test_configuration.check_services
+      unless result.up?
+        puts "\n\n" + Rainbow(result.error).yellow.bright + "\n\n"
+        exit 1
+      end
+    end
+    example.run
+  end
   config.order = :random
   config.filter_run_excluding :legacy
 end

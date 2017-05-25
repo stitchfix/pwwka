@@ -31,6 +31,8 @@ GEM
     rack (1.6.4)
     rack-protection (1.5.3)
       rack
+    rainbow (2.2.2)
+      rake
     rake (10.5.0)
     redis (3.2.2)
     redis-namespace (1.5.2)
@@ -87,6 +89,7 @@ PLATFORMS
 
 DEPENDENCIES
   pwwka!
+  rainbow
   rake
   resque
   resque-retry
@@ -95,4 +98,4 @@ DEPENDENCIES
   simplecov
 
 BUNDLED WITH
-   1.13.6
+   1.14.6
