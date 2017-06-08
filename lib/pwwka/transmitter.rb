@@ -108,7 +108,7 @@ module Pwwka
     #
     # Returns true if the message was sent, false otherwise
     # @deprecated This is ignoring a message. ::send_message supports this explicitly.
-    def self.send_message_safely(payload, routing_key, delayed: false, delay_by: nil, message_id: message_id)
+    def self.send_message_safely(payload, routing_key, delayed: false, delay_by: nil, message_id: :auto_generate)
       send_message!(payload, routing_key, delayed: delayed, delay_by: delay_by, on_error: :ignore)
     end
 
