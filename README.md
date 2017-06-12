@@ -91,6 +91,35 @@ Pwwka::Transmitter.send_message!(payload, routing_key)
 
 The payload should be a simple hash containing primitives. Don't send objects because the payload will be converted to JSON for sending.
 
+#### AMQP Attributes
+
+By default, pwwka will set the following [AMQP Attributes](http://stackoverflow.com/questions/18403623/rabbitmq-amqp-basicproperties-builder-values/18447385#18447385):
+
+* `message_id` - a GUID
+* `timestamp` - The time the message is sent
+* `app_id` - the name of your Rails app or, if you aren't using rails, the value of `app_id` given to the configuration
+* `content_type` - `application/json; version=1`
+
+You may optionally set the following when sending a message to set these additional attributes:
+
+* `message_id` - to override the GUID.  Generally don't do this.
+* `type` - a String to define the data type you are sending.  Useful for languages with static types to know how to
+deserialize.  You should ensure that the combo of `app_id` and `type` are unique to your entire ecosystem or consumers won't
+know what they are receiving.
+* `headers` - a hash of arbitrary headers.
+
+A fuller example:
+
+```ruby
+Pwwka::Transmitter.send_message!(
+  { "customer_id" => 12345, "active" => true },
+  "customers.customer.created",
+  type: "Customer",
+  headers: {
+    "RAILS_VERSION" => "5.1.1"
+  }
+)
+```
 
 #### Error Handling
 
