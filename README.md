@@ -311,7 +311,7 @@ If you use [Resque][resque], and you wish to handle messages in a resque job, yo
    class MyResqueJob
      @queue = :my_resque_queue
 
-     def self.process(args) # i.e. payload
+     def self.perform(args) # i.e. payload
        user = User.find(args.fetch("user_id")) # or whatever
        user.frobnosticate!
      end
