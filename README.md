@@ -301,7 +301,7 @@ If you use [Resque][resque], and you wish to handle messages in a resque job, yo
 2. Now, configure your handler.  For a `Procfile` setup:
 
    ```
-   my_handler: rake message_handler:receive HANDLER_KLASS=Pwwka::QueueResqueJobHandler JOB_KLASS=MyResqueJob QUEUE_NAME=my_queue ROUTING_KEY="my.key.completed"
+   my_handler: rake message_handler:receive HANDLER_KLASS=Pwwka::QueueResqueJobHandler JOB_KLASS=MyResqueJob PWWKA_QUEUE_EXTENDED_INFO=true QUEUE_NAME=my_queue ROUTING_KEY="my.key.completed"
    ```
 
    Note the use of the environment variable `JOB_KLASS`.  This tells `QueueResqueJobHandler` which class to queue.
@@ -311,16 +311,18 @@ If you use [Resque][resque], and you wish to handle messages in a resque job, yo
    class MyResqueJob
      @queue = :my_resque_queue
 
-     def self.perform(args) # i.e. payload
-       user = User.find(args.fetch("user_id")) # or whatever
+     def self.perform(payload,            # the payload
+                      routing_key,        # routing key as a string
+                      message_properties) # properties as a hash with _String_ keys
+       user = User.find(payload.fetch("user_id")) # or whatever
        user.frobnosticate!
      end
    end
    ```
 
-   Note that you must provide `@queue` in your job.  `QueueResqueJobHandler` doesn't support setting a custom queue and enqueue-time (PRs welcome :).
-   Note further that your job class is not given the routing key, so you'll have to set `ROUTING_KEY` appropriately for whatever it is you're trying to
-   do.
+   Note that you must provide `@queue` in your job.  `QueueResqueJobHandler` doesn't support setting a custom queue at enqueue-time (PRs welcome :).
+
+   Note that if you were using this library before version 0.11.0, your job would only be given the payload.  This is why `PWWKA_QUEUE_EXTENDED_INFO` must be set.  Without it, your job only gets the payload to avoid breaking legacy consumers.  You should always set this so you have access to the entire message.
 3. Profit!
 
 [resque]: https://github.com/resque/resque/tree/1-x-stable
