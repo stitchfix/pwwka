@@ -1,5 +1,7 @@
 require 'spec_helper.rb'
 require 'resqutils/spec/resque_helpers'
+require 'resqutils/spec/resque_matchers'
+require 'pwwka/queue_resque_job_handler'
 
 require_relative "support/integration_test_setup"
 require_relative "support/logging_receiver"
@@ -10,21 +12,24 @@ describe "sending and receiving messages", :integration do
   include Resqutils::Spec::ResqueHelpers
 
   before do
+    ENV["JOB_KLASS"] = MyTestJob.name
+    ENV["PWWKA_QUEUE_EXTENDED_INFO"] = "true"
     @testing_setup = IntegrationTestSetup.new
     [
-      [AllReceiver      , "all_receiver_pwwkatesting"       , "#"]                 ,
-      [FooReceiver      , "foo_receiver_pwwkatesting"       , "pwwka.testing.foo"] ,
-      [OtherFooReceiver , "other_foo_receiver_pwwkatesting" , "pwwka.testing.foo"] ,
+
+      [AllReceiver                  , "all_receiver_pwwkatesting"             , "#"]                 ,
+      [FooReceiver                  , "foo_receiver_pwwkatesting"             , "pwwka.testing.foo"] ,
+      [OtherFooReceiver             , "other_foo_receiver_pwwkatesting"       , "pwwka.testing.foo"] ,
+      [Pwwka::QueueResqueJobHandler , "queue_resque_job_handler_pwwkatesting" , "#" ]                ,
+
     ].each do |(klass, queue_name, routing_key)|
       @testing_setup.make_queue_and_setup_receiver(klass,queue_name,routing_key)
     end
-  end
-
-  before :each do
     AllReceiver.reset!
     FooReceiver.reset!
     OtherFooReceiver.reset!
     clear_queue(:delayed)
+    clear_queue(MyTestJob)
   end
 
   after do
@@ -199,6 +204,32 @@ describe "sending and receiving messages", :integration do
     expect(AllReceiver.messages_received.size).to eq(1)
     expect(FooReceiver.messages_received.size).to eq(1)
     expect(OtherFooReceiver.messages_received.size).to eq(1)
+  end
+
+  it "can receive a message on a handler that just queues background jobs" do
+    payload = { sample: "payload", has: { deeply: true, nested: 4 }}
+    Pwwka::Transmitter.send_message!(payload, "foo.bar")
+
+    allow_receivers_to_process_queues
+
+    job = Resque.pop(:test_queue)
+    aggregate_failures "job paylod" do
+      expect(job["class"]).to eq(MyTestJob.name)
+      expect(job["args"][0]).to eq({ "sample" => "payload", "has" => { "deeply" => true, "nested" => 4 }})
+      expect(job["args"][1]).to eq("foo.bar")
+
+      # Expect a few things from the metadata for sanity
+      expect(job["args"][2].keys).to include("content_type")
+      expect(job["args"][2].keys).to include("message_id")
+      expect(job["args"][2].keys).to include("timestamp")
+    end
+  end
+
+  class MyTestJob
+    @queue = "test_queue"
+
+    def self.perform(payload,routing_key,properties)
+    end
   end
 
 
