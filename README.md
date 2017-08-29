@@ -322,7 +322,7 @@ If you use [Resque][resque], and you wish to handle messages in a resque job, yo
 
    Note that you must provide `@queue` in your job.  `QueueResqueJobHandler` doesn't support setting a custom queue at enqueue-time (PRs welcome :).
 
-   Note that if you were using this library before version 0.11.0, your job would only be given the payload.  This is why `PWWKA_QUEUE_EXTENDED_INFO` must be set.  Without it, your job only gets the payload to avoid breaking legacy consumers.  You should always set this so you have access to the entire message.
+   Note that if you were using this library before version 0.12.0, your job would only be given the payload.  This is why `PWWKA_QUEUE_EXTENDED_INFO` must be set.  Without it, your job only gets the payload to avoid breaking legacy consumers.  You should always set this so you have access to the entire message.
 3. Profit!
 
 [resque]: https://github.com/resque/resque/tree/1-x-stable

@@ -1,3 +1,3 @@
 module Pwwka
-  VERSION = '0.11.0.RC1'
+  VERSION = '0.12.0.RC1'
 end
