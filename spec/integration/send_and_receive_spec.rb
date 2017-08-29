@@ -35,7 +35,7 @@ describe "sending and receiving messages", :integration do
   after do
     @testing_setup.kill_threads_and_clear_queues
     ENV.delete("JOB_KLASS")
-    ENV.delette("PWWKA_QUEUE_EXTENDED_INFO")
+    ENV.delete("PWWKA_QUEUE_EXTENDED_INFO")
   end
 
   context "routing" do
