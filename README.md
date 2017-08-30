@@ -301,7 +301,7 @@ If you use [Resque][resque], and you wish to handle messages in a resque job, yo
 2. Now, configure your handler.  For a `Procfile` setup:
 
    ```
-   my_handler: rake message_handler:receive HANDLER_KLASS=Pwwka::QueueResqueJobHandler JOB_KLASS=MyResqueJob PWWKA_QUEUE_EXTENDED_INFO=true QUEUE_NAME=my_queue ROUTING_KEY="my.key.completed"
+   my_handler: rake message_handler:receive HANDLER_KLASS=Pwwka::QueueResqueJobHandler JOB_KLASS=MyResqueJob QUEUE_NAME=my_queue ROUTING_KEY="my.key.completed"
    ```
 
    Note the use of the environment variable `JOB_KLASS`.  This tells `QueueResqueJobHandler` which class to queue.
@@ -322,7 +322,8 @@ If you use [Resque][resque], and you wish to handle messages in a resque job, yo
 
    Note that you must provide `@queue` in your job.  `QueueResqueJobHandler` doesn't support setting a custom queue at enqueue-time (PRs welcome :).
 
-   Note that if you were using this library before version 0.12.0, your job would only be given the payload.  This is why `PWWKA_QUEUE_EXTENDED_INFO` must be set.  Without it, your job only gets the payload to avoid breaking legacy consumers.  You should always set this so you have access to the entire message.
+   Note that if you were using this library before version 0.12.0, your job would only be given the payload.  If you change your job to accept exatly three arguments, you will be given the payload, routing key, and message properties.  If any of those arguments are optional, you will need to set `PWWKA_QUEUE_EXTENDED_INFO` to `"true"` to force pwwka to pass those along.  Without it, your job only gets the payload to avoid breaking legacy consumers. 
+
 3. Profit!
 
 [resque]: https://github.com/resque/resque/tree/1-x-stable

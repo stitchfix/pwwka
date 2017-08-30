@@ -15,15 +15,25 @@ module Pwwka
   # Note that this will not check the routing key, so you should be sure to specify the most precise ROUTING_KEY you can for handling the message.
   class QueueResqueJobHandler
     def self.handle!(delivery_info,properties,payload)
+      job_klass = ENV["JOB_KLASS"].constantize
       args = [
-        ENV["JOB_KLASS"].constantize,
+        job_klass,
         payload
       ]
-      if ENV["PWWKA_QUEUE_EXTENDED_INFO"] == 'true'
+      if ENV["PWWKA_QUEUE_EXTENDED_INFO"] == 'true' || job_klass_can_handle_args?(job_klass)
         args << delivery_info.routing_key
         args << properties.to_hash
       end
       Resque.enqueue(*args)
     end
+
+  private
+
+  def self.job_klass_can_handle_args?(job_klass)
+      method = job_klass.method(:perform)
+      return false if method.nil?
+      method.arity == 3
+    end
   end
+
 end
