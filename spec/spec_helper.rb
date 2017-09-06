@@ -46,8 +46,7 @@ RSpec.configure do |config|
     if example.metadata[:integration]
       result = test_configuration.check_services
       unless result.up?
-        puts "\n\n" + Rainbow(result.error).yellow.bright + "\n\n"
-        exit 1
+        fail result.error
       end
     end
     example.run
