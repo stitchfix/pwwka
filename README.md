@@ -311,19 +311,16 @@ If you use [Resque][resque], and you wish to handle messages in a resque job, yo
    class MyResqueJob
      @queue = :my_resque_queue
 
-     def self.perform(payload,            # the payload
-                      routing_key,        # routing key as a string
-                      message_properties) # properties as a hash with _String_ keys
-       user = User.find(payload.fetch("user_id")) # or whatever
+     def self.perform(args) # i.e. payload
+       user = User.find(args.fetch("user_id")) # or whatever
        user.frobnosticate!
      end
    end
    ```
 
-   Note that you must provide `@queue` in your job.  `QueueResqueJobHandler` doesn't support setting a custom queue at enqueue-time (PRs welcome :).
-
-   Note that if you were using this library before version 0.12.0, your job would only be given the payload.  If you change your job to accept exatly three arguments, you will be given the payload, routing key, and message properties.  If any of those arguments are optional, you will need to set `PWWKA_QUEUE_EXTENDED_INFO` to `"true"` to force pwwka to pass those along.  Without it, your job only gets the payload to avoid breaking legacy consumers. 
-
+   Note that you must provide `@queue` in your job.  `QueueResqueJobHandler` doesn't support setting a custom queue and enqueue-time (PRs welcome :).
+   Note further that your job class is not given the routing key, so you'll have to set `ROUTING_KEY` appropriately for whatever it is you're trying to
+   do.
 3. Profit!
 
 [resque]: https://github.com/resque/resque/tree/1-x-stable
