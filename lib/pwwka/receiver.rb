@@ -42,7 +42,11 @@ module Pwwka
               log_error "Error Processing Message", error_options
               receiver.nack(delivery_info.delivery_tag)
             end
-            unless Pwwka.configuration.keep_alive_on_handler_klass_exceptions?
+            if handler_klass.respond_to?(:on_unhandled_error)
+              handler_klass.on_unhandled_error(e)
+            elsif Pwwka.configuration.keep_alive_on_handler_klass_exceptions?
+              # no op
+            else
               raise Interrupt,"Exiting due to exception #{e.inspect}"
             end
           end
