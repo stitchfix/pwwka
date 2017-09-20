@@ -28,27 +28,16 @@ module Pwwka
             handler_klass.handle!(delivery_info, properties, payload)
             receiver.ack(delivery_info.delivery_tag)
             logf "Processed Message on %{queue_name} -> %{payload}, %{routing_key}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key
-          rescue => e
-            error_options = {
-               queue_name: queue_name,
-                  payload: payload,
-              routing_key: delivery_info.routing_key,
-                exception: e
-            }
-            if Pwwka.configuration.requeue_on_error && !delivery_info.redelivered
-              log_error "Retrying an Error Processing Message", error_options
-              receiver.nack_requeue(delivery_info.delivery_tag)
-            else
-              log_error "Error Processing Message", error_options
-              receiver.nack(delivery_info.delivery_tag)
-            end
-            if handler_klass.respond_to?(:on_unhandled_error)
-              handler_klass.on_unhandled_error(e)
-            elsif Pwwka.configuration.keep_alive_on_handler_klass_exceptions?
-              # no op
-            else
-              raise Interrupt,"Exiting due to exception #{e.inspect}"
-            end
+          rescue => exception
+            Pwwka::ErrorHandlers::Chain.new(
+              Pwwka.configuration.error_handling_chain
+            ).handle_error(
+              handler_klass,
+              receiver,
+              queue_name,
+              payload,
+              delivery_info,
+              exception)
           end
         end
       rescue Interrupt => _
@@ -88,14 +77,6 @@ module Pwwka
       drop_queue
       topic_exchange.delete
       channel_connector.connection_close
-    end
-
-  private
-
-    def self.log_error(message,options)
-      options[:message] = message
-      options[:backtrace] = options.fetch(:exception).backtrace.join(';')
-      logf "%{message} on %{queue_name} -> %{payload}, %{routing_key}: %{exception}: %{backtrace}", options
     end
 
   end

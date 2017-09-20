@@ -11,9 +11,18 @@ module Pwwka
     attr_accessor :options
     attr_accessor :async_job_klass
     attr_accessor :send_message_resque_backoff_strategy
-    attr_accessor :requeue_on_error
+    attr_reader   :requeue_on_error
     attr_writer   :app_id
-    attr_writer   :keep_alive_on_handler_klass_exceptions
+    attr_writer   :error_handling_chain
+
+    def keep_alive_on_handler_klass_exceptions=(val)
+      @keep_alive_on_handler_klass_exceptions = val
+      @error_handling_chain = nil
+    end
+    def requeue_on_error=(val)
+      @requeue_on_error = val
+      @error_handling_chain = nil
+    end
 
     def initialize
       @rabbit_mq_host        = nil
@@ -59,6 +68,21 @@ module Pwwka
 
     def allow_delayed?
       options[:allow_delayed]
+    end
+
+    def error_handling_chain
+      @error_handling_chain ||= begin
+                                  klasses = []
+                                  if requeue_on_error
+                                    klasses << Pwwka::ErrorHandlers::NackAndRequeueOnce
+                                  else
+                                    klasses << Pwwka::ErrorHandlers::NackAndIgnore
+                                  end
+                                  unless Pwwka.configuration.keep_alive_on_handler_klass_exceptions?
+                                    klasses << Pwwka::ErrorHandlers::Crash
+                                  end
+                                  klasses
+                                end
     end
 
   end

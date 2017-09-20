@@ -24,6 +24,7 @@ describe "receivers with unhandled errors", :integration do
       WellBehavedReceiver.reset!
       ExceptionThrowingReceiver.reset!
       IntermittentErrorReceiver.reset!
+      ExceptionThrowingReceiverWithErrorHook.reset!
     end
 
     it "an error in one receiver doesn't prevent others from getting messages" do
@@ -67,6 +68,7 @@ describe "receivers with unhandled errors", :integration do
       WellBehavedReceiver.reset!
       ExceptionThrowingReceiver.reset!
       IntermittentErrorReceiver.reset!
+      ExceptionThrowingReceiverWithErrorHook.reset!
     end
     it "does not crash the receiver that received an error" do
       Pwwka.configure do |c|
@@ -86,6 +88,7 @@ describe "receivers with unhandled errors", :integration do
       WellBehavedReceiver.reset!
       ExceptionThrowingReceiver.reset!
       IntermittentErrorReceiver.reset!
+      ExceptionThrowingReceiverWithErrorHook.reset!
     end
     it "requeues the message exactly once" do
       Pwwka.configure do |c|
@@ -103,12 +106,13 @@ describe "receivers with unhandled errors", :integration do
     end
   end
 
-  context "handler with a custom error hook that ignores the exception" do
+  context "handler with a custom error handler that ignores the exception" do
     before do
       setup_receivers(ExceptionThrowingReceiverWithErrorHook)
       WellBehavedReceiver.reset!
-      ExceptionThrowingReceiverWithErrorHook.reset!
+      ExceptionThrowingReceiver.reset!
       IntermittentErrorReceiver.reset!
+      ExceptionThrowingReceiverWithErrorHook.reset!
     end
 
     it "does not crash the receiver" do
@@ -136,9 +140,17 @@ describe "receivers with unhandled errors", :integration do
       raise "OH NOES!"
     end
   end
+  class NoOpHandler < Pwwka::ErrorHandlers::BaseErrorHandler
+    def initialize(*)
+    end
+    def handle_error(receiver,queue_name,payload,delivery_info,exception)
+      receiver.nack(delivery_info.delivery_tag)
+      abort_chain
+    end
+  end
   class ExceptionThrowingReceiverWithErrorHook < LoggingReceiver
-    def self.on_unhandled_error(exception)
-      # not crashing
+    def self.error_handler
+      NoOpHandler
     end
 
     def self.handle!(delivery_info,properties,payload)
