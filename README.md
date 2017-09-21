@@ -282,6 +282,81 @@ these messages.  Some day Pwwka might have code to allow that.  Today is not tha
 
 **You should configure `requeue_on_error`**. It's not the default for backwards compatibility.
 
+#### Advanced Error Handling
+
+The underlying implementation of how errors are handled is via a [chain of responsibility-ish](https://en.wikipedia.org/wiki/Chain-of-responsibility_pattern) implementation.  When an unhandled exception occurs, pwwka's `Receiver`
+defers to the configurations `error_handling_chain`, which is a list of classes that can handle errors.  `requeue_on_error` and `keep_alive_on_handler_klass_exceptions` control which classes are in the chain.
+
+If you want to handle errors differently, for example crashing on some exceptions, but not others, or requeing messages on failures always (instead of just once), you can do that by subclassing `Pwwka::ErrorHandlers::BaseHandler`.
+It defines a method `handle_error` that is given the `Receiver` instance, queue name, payload, delivery info, and the uncaught exception.  If the method returns `true`, Pwwka calls the remaining handlers.  If false, it stops processing.
+
+Your subclass can be inserted into the chain in two ways.  Way #1 is to override the entire chain by setting `Pwwka.configuration.error_handling_chain` to an array of handlers, including yours.  Way #2 is to have your specific
+message handler implement `self.error_handler` to return the class to be used for just that message handler.
+
+**When you do this**, be careful to ensure you ack or nack.  If you fail to do either, your messages will build up and bad things will happen.
+
+For example, suppose you want to catch an ActiveRecord error, unwrap it to see if it's a problem with the connection, and reconnect before trying again.
+
+First, implement your custom error handler:
+
+```ruby
+class PostgresReconnectHandler < Pwwka::ErrorHandlers::BaseHandler
+  def handle_error(receiver,queue_name,payload,delivery_info,exception)
+    if exception.cause.is_a?(PG::ConnectionBad)
+      ActiveRecord::Base.connection.reconnect!
+    end
+    keep_going
+  end
+end
+```
+
+In your pwwka initializer:
+
+```ruby
+require 'pwwka'
+Pwwka.configure do |config|
+  config.rabbit_mq_host        = ENV['RABBITMQ_URL']
+  config.topic_exchange_name   = "mycompany-topics-#{Rails.env}"
+  config.delayed_exchange_name = "mycompany-topics-#{Rails.env}"
+  config.options               = {allow_delayed: true}
+  config.error_handling_chain = [
+    PostgresReconnectHandler,
+    Pwwka::ErrorHandlers::NackAndRequeueOnce,
+    Pwwka::ErrorHandlers::Crash
+  ]
+end
+```
+
+This says:
+
+* If the error was a `PG::ConnectionBad`, reconnect
+* If the message has not been retried, nack it and requeue it, otherwise ignore it (`NackAndRequeueOnce`)
+* Crash the handler
+
+You might not want to crash the handler in the case of `PG::ConnectionBad`.  And, you might want to always retry the job, even if it's been retried before so you don't lose it.
+
+In that case, your handler could work like this:
+
+
+```ruby
+class PostgresReconnectHandler < Pwwka::ErrorHandlers::BaseHandler
+  def handle_error(receiver,queue_name,payload,delivery_info,exception)
+    if exception.cause.is_a?(PG::ConnectionBad)
+      ActiveRecord::Base.connection.reconnect!
+      log("Retrying an Error Processing Message",queue_name,payload,delivery_info,exception)
+      receiver.nack_requeue(delivery_info.delivery_tag)
+      abort_chain
+    else
+      keep_going
+    end
+  end
+end
+```
+
+Now, if we get a `PG::ConnectionBad`, we reconnect, nack with requeue and stop processing the error (`abort_chain` is an alias for `false`, and `keep_going` is an alias for `true`, but they keep you from having to remember what to return).
+
+**When making your own handlers** it's important to make sure that the message is nacked or acked.**
+
 #### Handling Messages with Resque
 
 If you use [Resque][resque], and you wish to handle messages in a resque job, you can use `Pwwka::QueueResqueJobHandler`, which is an adapter between the standard `handle!` method provided by pwwka and your Resque job.
