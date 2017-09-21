@@ -79,4 +79,44 @@ describe Pwwka::Configuration do
       end
     end
   end
+
+  describe "#error_handling_chain" do
+    before do
+      configuration.instance_variable_set("@error_handling_chain",nil)
+    end
+    context "implicit configuration" do
+      context "when requeue_on_error" do
+        context "when keep_alive_on_handler_klass_exceptions" do
+          it "is NackAndRequeueOnce" do
+            configuration.requeue_on_error = true
+            configuration.keep_alive_on_handler_klass_exceptions = true
+            expect(configuration.error_handling_chain).to eq([Pwwka::ErrorHandlers::NackAndRequeueOnce])
+          end
+        end
+        context "when not keep_alive_on_handler_klass_exceptions" do
+          it "is NackAndRequeueOnce,Crash" do
+            configuration.requeue_on_error = true
+            configuration.keep_alive_on_handler_klass_exceptions = false
+            expect(configuration.error_handling_chain).to eq([Pwwka::ErrorHandlers::NackAndRequeueOnce,Pwwka::ErrorHandlers::Crash])
+          end
+        end
+      end
+      context "when not requeue_on_error" do
+        context "when keep_alive_on_handler_klass_exceptions" do
+          it "is NackAndIgnore" do
+            configuration.requeue_on_error = false
+            configuration.keep_alive_on_handler_klass_exceptions = true
+            expect(configuration.error_handling_chain).to eq([Pwwka::ErrorHandlers::NackAndIgnore])
+          end
+        end
+        context "when not keep_alive_on_handler_klass_exceptions" do
+          it "is NackAndIgnore,Crash" do
+            configuration.requeue_on_error = false
+            configuration.keep_alive_on_handler_klass_exceptions = false
+            expect(configuration.error_handling_chain).to eq([Pwwka::ErrorHandlers::NackAndIgnore,Pwwka::ErrorHandlers::Crash])
+          end
+        end
+      end
+    end
+  end
 end

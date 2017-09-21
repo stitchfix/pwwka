@@ -15,15 +15,6 @@ module Pwwka
     attr_writer   :app_id
     attr_writer   :error_handling_chain
 
-    def keep_alive_on_handler_klass_exceptions=(val)
-      @keep_alive_on_handler_klass_exceptions = val
-      @error_handling_chain = nil
-    end
-    def requeue_on_error=(val)
-      @requeue_on_error = val
-      @error_handling_chain = nil
-    end
-
     def initialize
       @rabbit_mq_host        = nil
       @topic_exchange_name   = "pwwka.topics.#{Pwwka.environment}"
@@ -85,5 +76,28 @@ module Pwwka
                                 end
     end
 
+    def keep_alive_on_handler_klass_exceptions=(val)
+      @keep_alive_on_handler_klass_exceptions = val
+      if @keep_alive_on_handler_klass_exceptions
+        @error_handling_chain.delete(Pwwka::ErrorHandlers::Crash)
+      elsif !@error_handling_chain.include?(Pwwka::ErrorHandlers::Crash)
+        @error_handling_chain << Pwwka::ErrorHandlers::Crash
+      end
+    end
+
+    def requeue_on_error=(val)
+      @requeue_on_error = val
+      if @requeue_on_error
+        index = error_handling_chain.index(Pwwka::ErrorHandlers::NackAndIgnore)
+        if index
+          @error_handling_chain[index] = Pwwka::ErrorHandlers::NackAndRequeueOnce
+        end
+      else
+        index = error_handling_chain.index(Pwwka::ErrorHandlers::NackAndRequeueOnce)
+        if index
+          @error_handling_chain[index] = Pwwka::ErrorHandlers::NackAndIgnore
+        end
+      end
+    end
   end
 end

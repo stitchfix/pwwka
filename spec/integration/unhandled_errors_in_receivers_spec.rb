@@ -8,6 +8,7 @@ describe "receivers with unhandled errors", :integration do
 
   before do
     @testing_setup = IntegrationTestSetup.new
+    Pwwka.configuration.instance_variable_set("@error_handling_chain",nil)
     Pwwka.configure do |c|
       c.requeue_on_error = false
       c.keep_alive_on_handler_klass_exceptions = false
