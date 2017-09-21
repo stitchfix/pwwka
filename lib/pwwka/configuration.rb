@@ -64,12 +64,12 @@ module Pwwka
     def error_handling_chain
       @error_handling_chain ||= begin
                                   klasses = []
-                                  if requeue_on_error
+                                  if self.requeue_on_error
                                     klasses << Pwwka::ErrorHandlers::NackAndRequeueOnce
                                   else
                                     klasses << Pwwka::ErrorHandlers::NackAndIgnore
                                   end
-                                  unless Pwwka.configuration.keep_alive_on_handler_klass_exceptions?
+                                  unless self.keep_alive_on_handler_klass_exceptions?
                                     klasses << Pwwka::ErrorHandlers::Crash
                                   end
                                   klasses
