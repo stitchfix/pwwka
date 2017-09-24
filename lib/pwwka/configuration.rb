@@ -63,7 +63,7 @@ module Pwwka
 
     def error_handling_chain
       @error_handling_chain ||= begin
-                                  klasses = []
+                                  klasses = [ Pwwka::ErrorHandlers::IgnorePayloadFormatErrors ]
                                   if self.requeue_on_error
                                     klasses << Pwwka::ErrorHandlers::NackAndRequeueOnce
                                   else

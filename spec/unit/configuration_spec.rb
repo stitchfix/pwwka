@@ -90,14 +90,14 @@ describe Pwwka::Configuration do
           it "is NackAndRequeueOnce" do
             configuration.requeue_on_error = true
             configuration.keep_alive_on_handler_klass_exceptions = true
-            expect(configuration.error_handling_chain).to eq([Pwwka::ErrorHandlers::NackAndRequeueOnce])
+            expect(configuration.error_handling_chain).to eq([Pwwka::ErrorHandlers::IgnorePayloadFormatErrors,Pwwka::ErrorHandlers::NackAndRequeueOnce])
           end
         end
         context "when not keep_alive_on_handler_klass_exceptions" do
           it "is NackAndRequeueOnce,Crash" do
             configuration.requeue_on_error = true
             configuration.keep_alive_on_handler_klass_exceptions = false
-            expect(configuration.error_handling_chain).to eq([Pwwka::ErrorHandlers::NackAndRequeueOnce,Pwwka::ErrorHandlers::Crash])
+            expect(configuration.error_handling_chain).to eq([Pwwka::ErrorHandlers::IgnorePayloadFormatErrors,Pwwka::ErrorHandlers::NackAndRequeueOnce,Pwwka::ErrorHandlers::Crash])
           end
         end
       end
@@ -106,14 +106,14 @@ describe Pwwka::Configuration do
           it "is NackAndIgnore" do
             configuration.requeue_on_error = false
             configuration.keep_alive_on_handler_klass_exceptions = true
-            expect(configuration.error_handling_chain).to eq([Pwwka::ErrorHandlers::NackAndIgnore])
+            expect(configuration.error_handling_chain).to eq([Pwwka::ErrorHandlers::IgnorePayloadFormatErrors,Pwwka::ErrorHandlers::NackAndIgnore])
           end
         end
         context "when not keep_alive_on_handler_klass_exceptions" do
           it "is NackAndIgnore,Crash" do
             configuration.requeue_on_error = false
             configuration.keep_alive_on_handler_klass_exceptions = false
-            expect(configuration.error_handling_chain).to eq([Pwwka::ErrorHandlers::NackAndIgnore,Pwwka::ErrorHandlers::Crash])
+            expect(configuration.error_handling_chain).to eq([Pwwka::ErrorHandlers::IgnorePayloadFormatErrors,Pwwka::ErrorHandlers::NackAndIgnore,Pwwka::ErrorHandlers::Crash])
           end
         end
       end

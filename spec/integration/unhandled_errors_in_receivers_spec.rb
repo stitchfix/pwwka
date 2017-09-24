@@ -3,6 +3,11 @@ require_relative "support/integration_test_setup"
 require_relative "support/logging_receiver"
 require_relative "support/integration_test_helpers"
 
+class EvilPayload
+  def to_json
+    "This is not JSON by any stretch"
+  end
+end
 describe "receivers with unhandled errors", :integration do
   include IntegrationTestHelpers
 
@@ -43,6 +48,22 @@ describe "receivers with unhandled errors", :integration do
 
       expect(@testing_setup.threads[ExceptionThrowingReceiver].alive?).to eq(false)
     end
+
+    it "does not crash the receiver on a borked payload, but doesn't call handlers either" do
+      Pwwka.configure do |c|
+        c.requeue_on_error = true
+      end
+      Pwwka::Transmitter.send_message!(EvilPayload.new,
+                                       "pwwka.testing.foo")
+      allow_receivers_to_process_queues
+
+      expect(@testing_setup.threads[ExceptionThrowingReceiver].alive?).to eq(true)
+      expect(@testing_setup.threads[WellBehavedReceiver].alive?).to eq(true)
+      expect(@testing_setup.threads[IntermittentErrorReceiver].alive?).to eq(true)
+      expect(WellBehavedReceiver.messages_received.size).to eq(0)
+      expect(ExceptionThrowingReceiver.messages_received.size).to eq(0)
+    end
+
     it "does not crash the receiver that successfully processed a message" do
       Pwwka::Transmitter.send_message!({ sample: "payload", has: { deeply: true, nested: 4 }},
                                        "pwwka.testing.foo")
