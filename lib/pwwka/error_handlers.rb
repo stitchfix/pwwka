@@ -1,3 +1,8 @@
+module Pwwka
+  module ErrorHandlers
+  end
+end
+
 require_relative "error_handlers/chain"
 require_relative "error_handlers/base_error_handler"
 require_relative "error_handlers/crash"
