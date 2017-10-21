@@ -12,3 +12,4 @@ db
 .rspec
 .bundle
 coverage
+Session.vim
