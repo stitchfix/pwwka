@@ -7,6 +7,9 @@ describe Pwwka::Logging do
   end
 
   it "returns the logger" do
+    Pwwka.configure do |c|
+      c.logger = MonoLogger.new(STDOUT)
+    end
     expect(ForLogging.logger).to be_instance_of(MonoLogger)
   end
 
