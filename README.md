@@ -260,8 +260,8 @@ end
 
 #### Errors From Your Handler
 
-By default, all unhandled errors will crash your handler.  This is good, because it allows you to recover from most intermittent things.  Just be aware of this when configuring your handler so that it gets
-restarted after a crash.
+By default, handlers will log and ignore garbled payloads (basically payloads that fail to be parsed as JSON).  All other errors
+will crash the handler, under the assumption that it will restart.  This is good, because it allows you to recover from most intermittent things.  Just be aware of this when configuring your handler so that it gets restarted after a crash.
 
 What happens to the message you received during the error depends:
 
