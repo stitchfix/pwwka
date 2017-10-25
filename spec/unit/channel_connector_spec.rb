@@ -16,10 +16,15 @@ describe Pwwka::ChannelConnector do
     end
 
     it "sets a prefetch value if configured to do so" do
-      allow(Pwwka.configuration).to receive(:prefetch).and_return(10)
       expect(bunny_channel).to receive(:prefetch).with(10)
 
-      channel_connector
+      described_class.new(prefetch: 10)
+    end
+
+    it "does not set a prefetch value unless configured" do
+      expect(bunny_channel).not_to receive(:prefetch).with(10)
+
+      described_class.new
     end
   end
 

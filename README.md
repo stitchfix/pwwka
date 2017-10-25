@@ -37,7 +37,7 @@ Pwwka.configure do |config|
   config.delayed_exchange_name = "mycompany-topics-#{Rails.env}"
   config.options               = {allow_delayed: true}
   config.requeue_on_error      = true
-  config.prefetch              = 10
+  config.default_prefetch      = 10
 end
 ```
 

@@ -9,17 +9,17 @@ module Pwwka
     attr_reader :queue_name
     attr_reader :routing_key
 
-    def initialize(queue_name, routing_key)
+    def initialize(queue_name, routing_key, prefetch: Pwwka.configuration.default_prefetch)
       @queue_name        = queue_name
       @routing_key       = routing_key
-      @channel_connector = ChannelConnector.new
+      @channel_connector = ChannelConnector.new(prefetch: prefetch)
       @channel           = @channel_connector.channel
       @topic_exchange    = @channel_connector.topic_exchange
     end
 
-    def self.subscribe(handler_klass, queue_name, routing_key: "#.#", block: true)
+    def self.subscribe(handler_klass, queue_name, routing_key: "#.#", block: true, prefetch: Pwwka.configuration.default_prefetch)
       raise "#{handler_klass.name} must respond to `handle!`" unless handler_klass.respond_to?(:handle!)
-      receiver  = new(queue_name, routing_key)
+      receiver  = new(queue_name, routing_key, prefetch: prefetch)
       begin
         info "Receiving on #{queue_name}"
         receiver.topic_queue.subscribe(manual_ack: true, block: block) do |delivery_info, properties, payload|
