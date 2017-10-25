@@ -37,6 +37,7 @@ Pwwka.configure do |config|
   config.delayed_exchange_name = "mycompany-topics-#{Rails.env}"
   config.options               = {allow_delayed: true}
   config.requeue_on_error      = true
+  config.prefetch              = 10
 end
 ```
 
@@ -211,6 +212,7 @@ It requires some environment variables to work:
 * `HANDLER_KLASS` (required) refers to the class you have to write in your app (equivalent to a `job` in Resque)
 * `QUEUE_NAME` (required) we must use named queues - see below
 * `ROUTING_KEY` (optional) defaults to `#.#` (all messages)
+* `PREFETCH` (optional) sets a [prefetch value](http://rubybunny.info/articles/queues.html#qos__prefetching_messages) for the subscriber
 
 You'll also need to bring the Rake task into your app.  For Rails, you'll need to edit the top-level `Rakefile`:
 

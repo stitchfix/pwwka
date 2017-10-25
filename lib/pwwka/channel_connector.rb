@@ -15,6 +15,9 @@ module Pwwka
                                   connection_options)
       @connection.start
       @channel           = @connection.create_channel
+      if @configuration.prefetch
+        @channel.prefetch(@configuration.prefetch)
+      end
     end
 
     def topic_exchange
