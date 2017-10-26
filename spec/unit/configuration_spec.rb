@@ -119,4 +119,18 @@ describe Pwwka::Configuration do
       end
     end
   end
+
+  describe "#default_prefetch" do
+    it "is nil by default" do
+      expect(configuration.default_prefetch).to be_nil
+    end
+
+    it "is a number" do
+      configuration.default_prefetch = 10
+      expect(configuration.default_prefetch).to eq(10)
+      configuration.default_prefetch = "10"
+      expect(configuration.default_prefetch).to eq(10)
+    end
+  end
+
 end
