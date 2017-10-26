@@ -12,18 +12,3 @@ RSpec::Core::RakeTask.new(:spec)
 Bundler::GemHelper.install_tasks
 
 task default: :spec
-
-task :tag do
-  require "pwwka/version"
-  version = "v#{Pwwka::VERSION}"
-  if `git tag`.split(/\n/).grep(/^#{version}/)
-    puts "Already tagged"
-  else
-    sh("git tag #{version}")     { |ok,res| fail res.inspect unless ok }
-    sh("git push --tags origin") { |ok,res| fail res.inspect unless ok }
-  end
-end
-
-task release: [ :build, :tag ] do
-  sh("gem push --key rubygems_stitchfix_api_key pkg/pwwka-#{Pwwka::VERSION}.gem") { |ok,res| fail res.inspect unless ok }
-end
