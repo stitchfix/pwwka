@@ -5,6 +5,19 @@ require_relative "support/integration_test_setup"
 require_relative "support/logging_receiver"
 require_relative "support/integration_test_helpers"
 
+class PoorlyBehavingErrorHandler < Pwwka::ErrorHandlers::BaseErrorHandler
+  def handle_error(receiver,queue_name,payload,delivery_info,exception)
+    raise "whoops, do I break everything behind me?"
+    keep_going
+  end
+end
+
+class ErrorHandlerThatWorksFine < Pwwka::ErrorHandlers::BaseErrorHandler
+  def handle_error(receiver,queue_name,payload,delivery_info,exception)
+    keep_going
+  end
+end
+
 class EvilPayload
   def to_json
     "This is not JSON by any stretch"
@@ -164,6 +177,31 @@ describe "receivers with unhandled errors", :integration do
 
       expect(ExceptionThrowingReceiverWithErrorHook.messages_received.size).to eq(1)
       expect(@testing_setup.threads[ExceptionThrowingReceiverWithErrorHook].alive?).to eq(true)
+    end
+  end
+
+  context "handler with a custom error handler throws in the pwwka error handling chain throws its own exception" do
+    before do
+      setup_receivers(ExceptionThrowingReceiver)
+      WellBehavedReceiver.reset!
+      ExceptionThrowingReceiver.reset!
+      IntermittentErrorReceiver.reset!
+      ExceptionThrowingReceiverWithErrorHook.reset!
+    end
+
+    it "confirms subsequent error handlers do not run when there is an exception earlier in the chain" do
+			Pwwka.configuration.instance_variable_set("@error_handling_chain",
+				[
+          PoorlyBehavingErrorHandler,
+          ErrorHandlerThatWorksFine
+			  ])
+
+      Pwwka::Transmitter.send_message!({ sample: "payload", has: { deeply: true, nested: 4 }},
+                                       "pwwka.testing.foo")
+      allow_receivers_to_process_queues
+
+      expect(ExceptionThrowingReceiver.messages_received.size).to eq(1)
+      expect(@testing_setup.threads[ExceptionThrowingReceiver].alive?).to eq(true)
     end
   end
 
