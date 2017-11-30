@@ -27,7 +27,7 @@ module Pwwka
             end
             keep_going
           rescue StandardError => exception
-            logf "'%{error_handler_class}' failed with exception '%{exception}'", at: :fatal, error_handler_class: error_handler, exception: exception
+            logf "'%{error_handler_class}' aborting due to unhandled exception '%{exception}'", at: :fatal, error_handler_class: error_handler, exception: exception
             abort
           end
         }

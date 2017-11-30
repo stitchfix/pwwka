@@ -32,7 +32,7 @@ describe Pwwka::ErrorHandlers::Chain do
 
       it "logs exceptions that occur in the error handling chain" do
         expect(chain.logger).to receive(:send).with(any_args).exactly(2).times
-        expect(chain.logger).to receive(:send).with(:fatal, /failed with exception/)
+        expect(chain.logger).to receive(:send).with(:fatal, /aborting due to unhandled exception/)
 
         expect {
           chain.handle_error(double,double,double,double,double,double.as_null_object)
