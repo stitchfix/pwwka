@@ -180,24 +180,26 @@ describe "receivers with unhandled errors", :integration do
     end
   end
 
-  context "handler with a custom error handler throws in the pwwka error handling chain throws its own exception" do
+  context "a custom error handler in the pwwka error handling chain throws its own exception" do
     before do
-      setup_receivers(ExceptionThrowingReceiver)
-      WellBehavedReceiver.reset!
+      @testing_setup.make_queue_and_setup_receiver(ExceptionThrowingReceiver,"exception_throwing_receiver_pwwkatesting","#")
       ExceptionThrowingReceiver.reset!
-      IntermittentErrorReceiver.reset!
-      ExceptionThrowingReceiverWithErrorHook.reset!
+
+      Pwwka.configuration.instance_variable_set("@error_handling_chain",
+        [
+          PoorlyBehavingErrorHandler,
+          ErrorHandlerThatWorksFine
+        ])
+    end
+
+    after do
+      Pwwka.configuration.instance_variable_set("@error_handling_chain",nil)
     end
 
     it "confirms subsequent error handlers do not run when there is an exception earlier in the chain" do
-			Pwwka.configuration.instance_variable_set("@error_handling_chain",
-				[
-          PoorlyBehavingErrorHandler,
-          ErrorHandlerThatWorksFine
-			  ])
-
       Pwwka::Transmitter.send_message!({ sample: "payload", has: { deeply: true, nested: 4 }},
                                        "pwwka.testing.foo")
+
       allow_receivers_to_process_queues
 
       expect(ExceptionThrowingReceiver.messages_received.size).to eq(1)
