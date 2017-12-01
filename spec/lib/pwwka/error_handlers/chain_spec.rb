@@ -19,24 +19,14 @@ describe Pwwka::ErrorHandlers::Chain do
       it "does not run subsequent error handlers" do
         expect(good_error_handler_klass).to_not receive(:new)
 
-        expect {
-          chain.handle_error(double,double,double,double,double,double.as_null_object)
-        }.to raise_error(SystemExit)
-      end
-
-      it "aborts the process" do
-        expect {
-          chain.handle_error(double,double,double,double,double,double.as_null_object)
-        }.to raise_error(SystemExit)
+        chain.handle_error(double,double,double,double,double,double.as_null_object)
       end
 
       it "logs exceptions that occur in the error handling chain" do
-        expect(chain.logger).to receive(:send).with(any_args).exactly(2).times
+        allow(chain.logger).to receive(:send).with(any_args)
         expect(chain.logger).to receive(:send).with(:fatal, /aborting due to unhandled exception/)
 
-        expect {
-          chain.handle_error(double,double,double,double,double,double.as_null_object)
-        }.to raise_error(SystemExit)
+        chain.handle_error(double,double,double,double,double,double.as_null_object)
       end
     end
   end
