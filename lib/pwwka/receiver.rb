@@ -51,7 +51,7 @@ module Pwwka
     def topic_queue
       @topic_queue ||= begin
         queue = channel.queue(queue_name, durable: true, arguments: {})
-        queue.bind(topic_exchange, routing_key: routing_key)
+        routing_key.split(',').each { |k| queue.bind(topic_exchange, routing_key: k) }
         queue
       end
     end

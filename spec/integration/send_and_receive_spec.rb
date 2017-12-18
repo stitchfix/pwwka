@@ -19,6 +19,7 @@ describe "sending and receiving messages", :integration do
 
       [AllReceiver                  , "all_receiver_pwwkatesting"             , "#"]                 ,
       [FooReceiver                  , "foo_receiver_pwwkatesting"             , "pwwka.testing.foo"] ,
+      [MultiRoutingReceived         , "multi_routing_receiver_pwwkatesting"   , "pwwka.testing.bar,pwwka.testing.foo"] ,
       [OtherFooReceiver             , "other_foo_receiver_pwwkatesting"       , "pwwka.testing.foo"] ,
       [Pwwka::QueueResqueJobHandler , "queue_resque_job_handler_pwwkatesting" , "#" ]                ,
 
@@ -27,6 +28,7 @@ describe "sending and receiving messages", :integration do
     end
     AllReceiver.reset!
     FooReceiver.reset!
+    MultiRoutingReceived.reset!
     OtherFooReceiver.reset!
     clear_queue(:delayed)
     clear_queue(MyTestJob)
@@ -46,6 +48,7 @@ describe "sending and receiving messages", :integration do
 
       expect(AllReceiver.messages_received.size).to eq(1)
       expect(FooReceiver.messages_received.size).to eq(1)
+      expect(MultiRoutingReceived.messages_received.size).to eq(1)
       expect(OtherFooReceiver.messages_received.size).to eq(1)
       @testing_setup.queues.each do |queue|
         expect(queue.message_count).to eq(0)
@@ -58,6 +61,7 @@ describe "sending and receiving messages", :integration do
 
       expect(AllReceiver.messages_received.size).to eq(1)
       expect(FooReceiver.messages_received.size).to eq(0)
+      expect(MultiRoutingReceived.messages_received.size).to eq(1)
       expect(OtherFooReceiver.messages_received.size).to eq(0)
       @testing_setup.queues.each do |queue|
         expect(queue.message_count).to eq(0)
@@ -200,11 +204,13 @@ describe "sending and receiving messages", :integration do
 
     expect(AllReceiver.messages_received.size).to eq(0)
     expect(FooReceiver.messages_received.size).to eq(0)
+    expect(MultiRoutingReceived.messages_received.size).to eq(0)
     expect(OtherFooReceiver.messages_received.size).to eq(0)
 
     allow_receivers_to_process_queues(5_000)
     expect(AllReceiver.messages_received.size).to eq(1)
     expect(FooReceiver.messages_received.size).to eq(1)
+    expect(MultiRoutingReceived.messages_received.size).to eq(1)
     expect(OtherFooReceiver.messages_received.size).to eq(1)
   end
 
@@ -240,5 +246,7 @@ describe "sending and receiving messages", :integration do
   class FooReceiver < AllReceiver
   end
   class OtherFooReceiver < AllReceiver
+  end
+  class MultiRoutingReceived < AllReceiver
   end
 end
