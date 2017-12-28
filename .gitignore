@@ -13,3 +13,4 @@ db
 .bundle
 coverage
 Session.vim
+Gemfile.lock
