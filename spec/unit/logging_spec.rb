@@ -25,6 +25,7 @@ describe Pwwka::Logging do
 
     before do
       @original_logger = Pwwka.configuration.logger
+      @original_log_level = Pwwka.configuration.log_level
       Pwwka.configuration.logger = logger
       allow(logger).to receive(:info)
       allow(logger).to receive(:error)
@@ -32,8 +33,23 @@ describe Pwwka::Logging do
 
     after do
       Pwwka.configuration.logger = @original_logger
+      Pwwka.configuration.log_level = @original_log_level
       Pwwka.configuration.payload_logging = @original_payload_logging
     end
+
+    it "logs a printf-style string at info" do
+      ForLogging.logf("This is %{test} some %{data}", test: "a test of", data: "data and stuff", ignored: :hopefully)
+      expect(logger).to have_received(:info).with("This is a test of some data and stuff")
+    end
+
+    it "logs at a different level if configured to do so" do
+      Pwwka.configuration.log_level = :debug
+      allow(logger).to receive(:debug)
+
+      ForLogging.logf("This is %{test} some %{data}", test: "a test of", data: "data and stuff", ignored: :hopefully)
+      expect(logger).to have_received(:debug).with("This is a test of some data and stuff")
+    end
+
     it "logs a printf-style string at info" do
       ForLogging.logf("This is %{test} some %{data}", test: "a test of", data: "data and stuff", ignored: :hopefully)
       expect(logger).to have_received(:info).with("This is a test of some data and stuff")
