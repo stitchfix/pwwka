@@ -98,8 +98,8 @@ module Pwwka
       end
     end
 
-    # Send a less important message that doesn't have to go through. This eats
-    # any `StandardError` and logs it, returning false rather than blowing up.
+    # Send an important message that doesn't have to go through immediately. This 
+    # will queue a resque job rather than blowing up.
     #
     # payload:: Hash of what you'd like to include in your message
     # routing_key:: String routing key for the message
@@ -109,7 +109,7 @@ module Pwwka
     # Returns true if the message was sent, false otherwise
     # @deprecated This is ignoring a message. ::send_message supports this explicitly.
     def self.send_message_safely(payload, routing_key, delayed: false, delay_by: nil, message_id: :auto_generate)
-      send_message!(payload, routing_key, delayed: delayed, delay_by: delay_by, on_error: :ignore)
+      send_message!(payload, routing_key, delayed: delayed, delay_by: delay_by, on_error: :resque)
     end
 
     def send_message!(payload, routing_key, type: nil, headers: nil, message_id: :auto_generate)
