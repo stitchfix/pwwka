@@ -24,7 +24,7 @@ module Pwwka
         info "Receiving on #{queue_name}"
         receiver.topic_queue.subscribe(manual_ack: true, block: block) do |delivery_info, properties, payload|
           begin
-            payload = ActiveSupport::HashWithIndifferentAccess.new(JSON.parse(payload))
+            payload = parse_payload(payload)
             handler_klass.handle!(delivery_info, properties, payload)
             receiver.ack(delivery_info.delivery_tag)
             logf "Processed Message on %{queue_name} -> %{payload}, %{routing_key}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key
@@ -77,6 +77,11 @@ module Pwwka
       drop_queue
       topic_exchange.delete
       channel_connector.connection_close
+    end
+
+    def parse_payload(payload)
+      return payload if Pwwka.configuration.receive_raw_payload
+      ActiveSupport::HashWithIndifferentAccess.new(JSON.parse(payload))
     end
 
   end
