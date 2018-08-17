@@ -20,6 +20,18 @@ describe Pwwka::Configuration do
       expect(configuration.topic_exchange_name).to eq("pwwka.topics.production")
     end
   end
+
+  describe "#receive_raw_payload" do
+    it "is false by default" do
+      expect(configuration.receive_raw_payload).to be_falsey
+    end
+
+    it "can be overridden" do
+      configuration.receive_raw_payload = true
+      expect(configuration.receive_raw_payload).to be_truthy
+    end
+  end
+
   describe "#delayed_exchange_name" do
     it "is based on the Pwwka.environment" do
       expect(configuration.delayed_exchange_name).to eq("pwwka.delayed.production")

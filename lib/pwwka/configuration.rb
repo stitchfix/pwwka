@@ -13,6 +13,7 @@ module Pwwka
     attr_accessor :async_job_klass
     attr_accessor :send_message_resque_backoff_strategy
     attr_accessor :default_prefetch
+    attr_accessor :receive_raw_payload
     attr_reader   :requeue_on_error
     attr_writer   :app_id
     attr_writer   :error_handling_chain
@@ -31,6 +32,7 @@ module Pwwka
       @keep_alive_on_handler_klass_exceptions = false
       @async_job_klass = Pwwka::SendMessageAsyncJob
       @default_prefetch = nil
+      @receive_raw_payload = false
     end
 
     def keep_alive_on_handler_klass_exceptions?
@@ -106,6 +108,10 @@ module Pwwka
 
     def default_prefetch=(val)
       @default_prefetch = val.nil? ? val : val.to_i
+    end
+
+    def receive_raw_payload=(val)
+      @receive_raw_payload = val
     end
   end
 end
