@@ -109,11 +109,17 @@ module Pwwka
       @default_prefetch = val.nil? ? val : val.to_i
     end
 
+    # Set this if you don't want the payload parsed.  This can be useful is you are expecting a lot of malformed
+    # JSON or if you aren't using JSON at all.  Note that currently, setting this to true will prevent all
+    # payloads from being logged
     def receive_raw_payload=(val)
       @receive_raw_payload = val
       @payload_parser = nil
     end
 
+    # Returns a proc that, when called with the payload, parses it according to the configuration.
+    #
+    # By default, this will assume the payload is JSON, parse it, and return a HashWithIndifferentAccess.
     def payload_parser
       @payload_parser ||= if @receive_raw_payload
                             ->(payload) { payload }
@@ -124,6 +130,9 @@ module Pwwka
                           end
     end
 
+    # True if we should omit the payload from the log
+    #
+    # ::level_of_message_with_payload the level of the message about to be logged
     def omit_payload_from_log?(level_of_message_with_payload)
       return true if @receive_raw_payload
       Pwwka::Logging::LEVELS[Pwwka.configuration.payload_logging.to_sym] > Pwwka::Logging::LEVELS[level_of_message_with_payload.to_sym]
