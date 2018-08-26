@@ -260,6 +260,26 @@ private
 end
 ```
 
+#### Payload Parsing
+
+By default, payloads are assumed to be JSON and are parsed before being sent to your `handle!` method (meaning: that method is
+given a `HashWithIndifferentAccess` of your payload).
+
+If you don't want this, for example if you are using XML or some other format, you can turn this feature off in your
+initializers:
+
+```ruby
+# config/initialisers/pwwka.rb
+require 'pwwka'
+
+Pwwka.configure do |config|
+  config.receive_raw_payload = true
+  # any other settings you might have
+end
+```
+
+In this case, your handler gets whatever Bunny returns, so you are on your own.
+
 #### Errors From Your Handler
 
 By default, handlers will log and ignore garbled payloads (basically payloads that fail to be parsed as JSON).  All other errors
