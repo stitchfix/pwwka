@@ -21,14 +21,24 @@ describe Pwwka::Configuration do
     end
   end
 
-  describe "#receive_raw_payload" do
-    it "is false by default" do
-      expect(configuration.receive_raw_payload).to be_falsey
+  describe "#payload_parser" do
+    it "parses JSON by default" do
+      payload = { foo: { bar: 42 } }
+      expect(described_class.new.payload_parser.(payload.to_json)).to eq({ "foo" => { "bar" => 42 } })
     end
 
-    it "can be overridden" do
+    it "setting receive_raw_payload to true pases through the raw payload" do
       configuration.receive_raw_payload = true
-      expect(configuration.receive_raw_payload).to be_truthy
+      payload = "<h1>This is some <blink>XML</blink></h1>"
+      expect(configuration.payload_parser.(payload)).to eq(payload)
+    end
+
+    it "setting receive_raw_payload to true then false restores the JSON-parsing" do
+      configuration.receive_raw_payload = true
+      payload = { foo: { bar: 42 } }
+      expect(configuration.payload_parser.(payload.to_json)).to eq(payload.to_json)
+      configuration.receive_raw_payload = false
+      expect(configuration.payload_parser.(payload.to_json)).to eq({ "foo" => { "bar" => 42 } })
     end
   end
 
