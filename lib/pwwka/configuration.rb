@@ -13,7 +13,6 @@ module Pwwka
     attr_accessor :async_job_klass
     attr_accessor :send_message_resque_backoff_strategy
     attr_accessor :default_prefetch
-    attr_accessor :receive_raw_payload
     attr_reader   :requeue_on_error
     attr_writer   :app_id
     attr_writer   :error_handling_chain
@@ -112,6 +111,22 @@ module Pwwka
 
     def receive_raw_payload=(val)
       @receive_raw_payload = val
+      @payload_parser = nil
+    end
+
+    def payload_parser
+      @payload_parser ||= if @receive_raw_payload
+                            ->(payload) { payload }
+                          else
+                            ->(payload) {
+                              ActiveSupport::HashWithIndifferentAccess.new(JSON.parse(payload))
+                            }
+                          end
+    end
+
+    def omit_payload_from_log?(level_of_message_with_payload)
+      return true if @receive_raw_payload
+      Pwwka::Logging::LEVELS[Pwwka.configuration.payload_logging.to_sym] > Pwwka::Logging::LEVELS[level_of_message_with_payload.to_sym]
     end
   end
 end

@@ -68,6 +68,7 @@ describe Pwwka::Logging do
       ].each do |name|
         it "will strip payload (given as a #{name.class}) if configured" do
           Pwwka.configuration.payload_logging = :error
+          Pwwka.configuration.receive_raw_payload = false
           ForLogging.logf("This is the payload: %{payload}", name => { foo: "bar" })
           ForLogging.logf("This is also the payload: %{payload}", name => { foo: "bar" }, at: :error)
           expect(logger).to have_received(:info).with("This is the payload: [omitted]")
@@ -76,6 +77,16 @@ describe Pwwka::Logging do
 
         it "will strip payload (given as a #{name.class}) of errors, too" do
           Pwwka.configuration.payload_logging = :fatal
+          Pwwka.configuration.receive_raw_payload = false
+          ForLogging.logf("This is the payload: %{payload}", name => { foo: "bar" })
+          ForLogging.logf("This is also the payload: %{payload}", name => { foo: "bar" }, at: :error)
+          expect(logger).to have_received(:info).with("This is the payload: [omitted]")
+          expect(logger).to have_received(:error).with("This is also the payload: [omitted]")
+        end
+
+        it "will strip payload (given as a #{name.class}) if we AREN'T parsing payloads" do
+          Pwwka.configuration.payload_logging = :info
+          Pwwka.configuration.receive_raw_payload = true
           ForLogging.logf("This is the payload: %{payload}", name => { foo: "bar" })
           ForLogging.logf("This is also the payload: %{payload}", name => { foo: "bar" }, at: :error)
           expect(logger).to have_received(:info).with("This is the payload: [omitted]")
