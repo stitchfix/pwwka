@@ -8,8 +8,13 @@ class TestConfiguration
   def initialize(docker_compose_file)
     yaml = YAML.load_file(docker_compose_file)
 
-    @resque_redis_port = (ENV["PWWKA_RESQUE_REDIS_PORT"] || yaml["services"]["resque"]["ports"].first.split(/:/)[0]).to_i
-    @rabbit_port       = (ENV["PWWKA_RABBIT_PORT"]       || yaml["services"]["rabbit"]["ports"].first.split(/:/)[0]).to_i
+    if ENV["CI"] == 'true'
+      @resque_redis_port = 6379
+      @rabbit_port       = 5672
+    else
+      @resque_redis_port = (ENV["PWWKA_RESQUE_REDIS_PORT"] || yaml["services"]["resque"]["ports"].first.split(/:/)[0]).to_i
+      @rabbit_port       = (ENV["PWWKA_RABBIT_PORT"]       || yaml["services"]["rabbit"]["ports"].first.split(/:/)[0]).to_i
+    end
   end
 
   def check_services

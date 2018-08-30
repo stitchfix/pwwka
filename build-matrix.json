@@ -1,4 +1,8 @@
 {
   "build_matrix": {
+    "additional_docker_images": [
+      "redis:2.8.12",
+      "rabbitmq:3.5.6"
+    ]
   }
 }
