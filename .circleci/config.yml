@@ -8,6 +8,8 @@ jobs:
     - image: circleci/ruby:2.5.1
       environment:
         BUNDLE_GEMFILE: Gemfile.rails-5.2
+    - image: redis:2.8.12
+    - image: rabbitmq:3.5.6
     working_directory: "~/pwwka"
     steps:
     - checkout
@@ -29,6 +31,8 @@ jobs:
     - image: circleci/ruby:2.4.4
       environment:
         BUNDLE_GEMFILE: Gemfile.rails-5.2
+    - image: redis:2.8.12
+    - image: rabbitmq:3.5.6
     working_directory: "~/pwwka"
     steps:
     - checkout
@@ -50,6 +54,8 @@ jobs:
     - image: circleci/ruby:2.5.1
       environment:
         BUNDLE_GEMFILE: Gemfile.rails-5.1
+    - image: redis:2.8.12
+    - image: rabbitmq:3.5.6
     working_directory: "~/pwwka"
     steps:
     - checkout
@@ -71,6 +77,8 @@ jobs:
     - image: circleci/ruby:2.4.4
       environment:
         BUNDLE_GEMFILE: Gemfile.rails-5.1
+    - image: redis:2.8.12
+    - image: rabbitmq:3.5.6
     working_directory: "~/pwwka"
     steps:
     - checkout
