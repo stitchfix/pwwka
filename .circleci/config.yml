@@ -15,8 +15,12 @@ jobs:
     - run: bundle exec rspec --format RspecJunitFormatter --out /tmp/test-results/rspec.xml
         --format=doc
     - run:
+        name: Run Additional CI Steps
+        command: if [ -e bin/additional-ci-steps ]; then bin/additional-ci-steps;
+          fi
+    - run:
         name: Notify Pager Duty
-        command: bundle exec y-notify eng-platform
+        command: 'bundle exec y-notify #eng-platform'
         when: on_fail
     - store_test_results:
         path: "/tmp/test-results"
@@ -32,8 +36,12 @@ jobs:
     - run: bundle exec rspec --format RspecJunitFormatter --out /tmp/test-results/rspec.xml
         --format=doc
     - run:
+        name: Run Additional CI Steps
+        command: if [ -e bin/additional-ci-steps ]; then bin/additional-ci-steps;
+          fi
+    - run:
         name: Notify Pager Duty
-        command: bundle exec y-notify eng-platform
+        command: 'bundle exec y-notify #eng-platform'
         when: on_fail
     - store_test_results:
         path: "/tmp/test-results"
@@ -49,8 +57,12 @@ jobs:
     - run: bundle exec rspec --format RspecJunitFormatter --out /tmp/test-results/rspec.xml
         --format=doc
     - run:
+        name: Run Additional CI Steps
+        command: if [ -e bin/additional-ci-steps ]; then bin/additional-ci-steps;
+          fi
+    - run:
         name: Notify Pager Duty
-        command: bundle exec y-notify eng-platform
+        command: 'bundle exec y-notify #eng-platform'
         when: on_fail
     - store_test_results:
         path: "/tmp/test-results"
@@ -66,8 +78,12 @@ jobs:
     - run: bundle exec rspec --format RspecJunitFormatter --out /tmp/test-results/rspec.xml
         --format=doc
     - run:
+        name: Run Additional CI Steps
+        command: if [ -e bin/additional-ci-steps ]; then bin/additional-ci-steps;
+          fi
+    - run:
         name: Notify Pager Duty
-        command: bundle exec y-notify eng-platform
+        command: 'bundle exec y-notify #eng-platform'
         when: on_fail
     - store_test_results:
         path: "/tmp/test-results"
