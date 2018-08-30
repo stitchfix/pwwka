@@ -19,7 +19,7 @@ In your `Gemfile`:
 gem 'pwwka'
 ```
 
-(of course, you can always run `gem install pwwka` to install it without Bundler)
+or `gem install pwwka` if you aren't using a `Gemfile`.
 
 To run applications locally, you will need Rabbit installed.  The [installation guide](https://www.rabbitmq.com/download.html) is a great
 place to start.  This repo includes a `docker-compose.yml` file which will run Rabbit inside a Docker container.  It's used by the tests,
