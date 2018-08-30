@@ -157,6 +157,36 @@ describe Pwwka::Receiver, :legacy do
 
     end
 
+    describe "#prepare_payload" do
+
+      context "when payload is JSON" do
+
+        it "returns a hash with indifferent access" do
+          payload = { something: "interesting" }.to_json
+
+          result = @receiver.prepare_payload(payload)
+
+          expect(result).to be_a(Hash)
+          expect(result).to have_key("something")
+          expect(result).to have_key(:something)
+        end
+
+      end
+
+      context "when the paylad is not JSON" do
+
+        it "defers the handling to a handler down the chain" do
+          payload = "<>"
+
+          result = @receiver.prepare_payload(payload)
+
+          expect(result).to eq(payload)
+        end
+
+      end
+
+    end
+
   end
 
 end

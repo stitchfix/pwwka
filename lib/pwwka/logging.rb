@@ -18,11 +18,11 @@ module Pwwka
     def logf(format,params)
       level = params.delete(:at) || Pwwka.configuration.log_level
       params[:payload] = params["payload"] if params["payload"]
-      params[:payload] = "[omitted]" if params[:payload] && LEVELS[Pwwka.configuration.payload_logging.to_sym] > LEVELS[level.to_sym]
+      if Pwwka.configuration.omit_payload_from_log?(level)
+        params[:payload] = "[omitted]" if params[:payload]
+      end
       message = format % params
       logger.send(level,message)
     end
-
-
   end
 end

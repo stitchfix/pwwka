@@ -11,7 +11,7 @@ module Pwwka
 
     def environment
       ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
-    end   
+    end
   end
 
 end
