@@ -50,6 +50,7 @@ RSpec.configure do |config|
       end
     end
     example.run
+    Pwwka.configuration.receive_raw_payload = false
   end
   config.order = :random
   config.filter_run_excluding :legacy
