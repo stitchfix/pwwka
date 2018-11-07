@@ -235,16 +235,16 @@ describe Pwwka::Transmitter do
       end
     end
     context "when there's an error" do
-      let(:error) { "OH NOES" }
       before do
-        allow_any_instance_of(described_class).to receive(:send_message!).and_raise(error)
+        allow_any_instance_of(described_class).to receive(:send_message!).and_raise("OH NOES")
       end
       it "logs the error" do
         begin
           described_class.send_message!(payload,routing_key)
         rescue => ex
         end
-        expect(logger).to have_received(:error).with(/ERROR #{error} Transmitting Message on #{routing_key} ->/)
+        expect(logger).to have_received(:error).with(/ERROR Transmitting Message on #{routing_key} ->/)
+        expect(logger).to have_received(:error).with(/OH NOES/)
       end
       context "on_error: :ignore" do
         it "ignores the error" do
@@ -292,16 +292,16 @@ describe Pwwka::Transmitter do
       end
     end
     context "when there's an error" do
-      let(:error) { "OH NOES" }
       before do
-        allow_any_instance_of(described_class).to receive(:send_message!).and_raise(error)
+        allow_any_instance_of(described_class).to receive(:send_message!).and_raise("OH NOES")
       end
       it "logs the error" do
         begin
           described_class.send_message_safely(payload,routing_key)
         rescue => ex
         end
-        expect(logger).to have_received(:error).with(/ERROR #{error} Transmitting Message on #{routing_key} ->/)
+        expect(logger).to have_received(:error).with(/ERROR Transmitting Message on #{routing_key} ->/)
+        expect(logger).to have_received(:error).with(/OH NOES/)
       end
       it "ignores the error" do
         expect {
