@@ -244,6 +244,7 @@ describe Pwwka::Transmitter do
         rescue => ex
         end
         expect(logger).to have_received(:error).with(/ERROR Transmitting Message on #{routing_key} ->/)
+        expect(logger).to have_received(:error).with(/OH NOES/)
       end
       context "on_error: :ignore" do
         it "ignores the error" do
@@ -300,6 +301,7 @@ describe Pwwka::Transmitter do
         rescue => ex
         end
         expect(logger).to have_received(:error).with(/ERROR Transmitting Message on #{routing_key} ->/)
+        expect(logger).to have_received(:error).with(/OH NOES/)
       end
       it "ignores the error" do
         expect {

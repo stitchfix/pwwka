@@ -63,7 +63,7 @@ module Pwwka
       true
     rescue => e
 
-      logf "ERROR Transmitting Message on %{routing_key} -> %{payload}", routing_key: routing_key, payload: payload, at: :error
+      logf "ERROR Transmitting Message on %{routing_key} -> %{payload} : %{error}", routing_key: routing_key, payload: payload, error: e, at: :error
 
       case on_error
 
