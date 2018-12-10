@@ -20,7 +20,7 @@ describe Pwwka::Transmitter do
     allow(logger).to receive(:info)
     allow(logger).to receive(:warn)
     allow(logger).to receive(:error)
-    allow(Pwwka::ChannelConnector).to receive(:new).and_return(channel_connector)
+    allow(Pwwka::ChannelConnector).to receive(:new).with(connection_name: "p: MyAwesomeApp").and_return(channel_connector)
     allow(channel_connector).to receive(:connection_close)
     allow(topic_exchange).to receive(:publish)
     allow(delayed_exchange).to receive(:publish)
