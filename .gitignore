@@ -8,7 +8,7 @@ db
 .tddium*
 .DS_Store
 .jhw-cache
-**.orig
+*.orig
 .rspec
 .bundle
 coverage
