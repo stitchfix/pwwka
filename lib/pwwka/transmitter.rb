@@ -26,7 +26,7 @@ module Pwwka
     attr_reader :channel_connector
 
     def initialize
-      @channel_connector = ChannelConnector.new
+      @channel_connector = ChannelConnector.new(connection_name: "p: #{Pwwka.configuration.app_id}")
     end
 
     # Send an important message that must go through.  This method allows any raised exception 

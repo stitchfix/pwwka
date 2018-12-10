@@ -8,9 +8,10 @@ module Pwwka
     # The channel_connector starts the connection to the message_bus
     # so it should only be instantiated by a method that has a strategy
     # for closing the connection
-    def initialize(prefetch: nil)
+    def initialize(prefetch: nil, connection_name: nil)
       @configuration     = Pwwka.configuration
       connection_options = {automatically_recover: false}.merge(configuration.options)
+      connection_options = {client_properties: {connection_name: connection_name}}.merge(connection_options) if connection_name
       @connection        = Bunny.new(configuration.rabbit_mq_host,
                                   connection_options)
       @connection.start
