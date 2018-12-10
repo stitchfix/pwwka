@@ -29,7 +29,7 @@ describe Pwwka::ChannelConnector do
 
     it "sets a connection_name if configured to do so" do
       expect(Bunny).to receive(:new).with(
-        "amqp://guest:guest@localhost:10001", 
+        /amqp:\/\/guest:guest@localhost:/, 
         {:client_properties=>{:connection_name=>"test_connection"},
          :automatically_recover=>false,
          :allow_delayed=>true})
@@ -39,7 +39,7 @@ describe Pwwka::ChannelConnector do
 
     it "only contains default options if none provided" do
       expect(Bunny).to receive(:new).with(
-        "amqp://guest:guest@localhost:10001", 
+        /amqp:\/\/guest:guest@localhost:/, 
         {:automatically_recover=>false, :allow_delayed=>true})
 
       described_class.new
