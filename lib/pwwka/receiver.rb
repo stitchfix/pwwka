@@ -47,6 +47,7 @@ module Pwwka
       rescue Interrupt => _
         # TODO: trap TERM within channel.work_pool
         info "Interrupting queue #{queue_name} subscriber safely"
+      ensure
         receiver.channel_connector.connection_close
       end
       return receiver
