@@ -327,8 +327,25 @@ describe Pwwka::Transmitter do
       expect(channel_connector).to have_received(:connection_close)
     end
 
-    context "with only basic required arguments" do
+    context 'when an error is raised' do
+      subject { transmitter.send_message!(payload,routing_key) }
+      let(:error) { 'oh no' }
 
+      before do
+        allow(topic_exchange).to receive(:publish).and_raise(error)
+      end
+
+      it 'should raise the error' do
+        expect { subject } .to raise_error(error)
+      end
+
+      it 'should close the channel connector' do
+        begin; subject; rescue; end
+        expect(channel_connector).to have_received(:connection_close)
+      end
+    end
+
+    context "with only basic required arguments" do
       before do
         transmitter.send_message!(payload,routing_key)
       end
@@ -337,6 +354,7 @@ describe Pwwka::Transmitter do
         let(:exchange) { topic_exchange }
       end
     end
+
     context "with everything overridden" do
       before do
         transmitter.send_message!(
@@ -367,6 +385,24 @@ describe Pwwka::Transmitter do
       it "creates the delayed queue" do
         transmitter.send_delayed_message!(payload,routing_key)
         expect(channel_connector).to have_received(:create_delayed_queue)
+      end
+
+      context 'when an error is raised' do
+        subject { transmitter.send_delayed_message!(payload,routing_key) }
+        let(:error) { 'oh no' }
+
+        before do
+          allow(delayed_exchange).to receive(:publish).and_raise(error)
+        end
+
+        it 'should raise the error' do
+          expect { subject } .to raise_error(error)
+        end
+
+        it 'should close the channel connector' do
+          begin; subject; rescue; end
+          expect(channel_connector).to have_received(:connection_close)
+        end
       end
 
       context "with only basic required arguments" do
