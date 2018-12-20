@@ -35,5 +35,12 @@ describe Pwwka::Receiver do
       begin; subject; rescue; end
       expect(channel_connector).to have_received(:connection_close)
     end
+
+    it 'logs on interrupt' do
+      allow(handler_klass).to receive(:handle!).and_raise(Interrupt)
+      allow(described_class).to receive(:info)
+      begin; subject; rescue; end
+      expect(described_class).to have_received(:info).with(/Interrupting queue #{queue_name}/)
+    end
   end
 end
