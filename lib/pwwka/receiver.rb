@@ -4,8 +4,6 @@ module Pwwka
     extend Pwwka::Logging
 
     attr_reader :channel_connector
-    attr_reader :channel
-    attr_reader :topic_exchange
     attr_reader :queue_name
     attr_reader :routing_key
 
@@ -83,5 +81,10 @@ module Pwwka
       topic_exchange.delete
       channel_connector.connection_close
     end
+
+    private
+
+    attr_reader :channel
+    attr_reader :topic_exchange
   end
 end

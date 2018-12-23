@@ -13,27 +13,19 @@ module Pwwka
     attr_reader :channel_connector
 
     def initialize
-      @channel_connector = ChannelConnector.new
+      @channel_connector = ChannelConnector.new(queue_name: "test-queue")
     end
 
     # call this method to create the queue used for testing
     # queue needs to be declared before the exchange is published to
     def test_setup
-      test_queue
+      channel_connector.bind(routing_key: "#.#")
       true
-    end
-
-    def test_queue
-      @test_queue  ||= begin
-                         test_queue  = channel_connector.channel.queue("test-queue", durable: true)
-                         test_queue.bind(channel_connector.topic_exchange, routing_key: "#.#")
-                         test_queue
-                       end
     end
 
     # Get the message on the queue as TestHandler::Message
     def pop_message
-      delivery_info, properties, payload = test_queue.pop
+      delivery_info, properties, payload = channel_connector.pop
       Message.new(delivery_info,
                   properties,
                   payload)
@@ -58,19 +50,11 @@ module Pwwka
     end
 
     def purge_test_queue
-      test_queue.purge  
-      channel_connector.delayed_queue.purge if channel_connector.configuration.allow_delayed?
+      channel_connector.purge
     end
 
     def test_teardown
-      test_queue.delete
-      channel_connector.topic_exchange.delete
-      # delayed messages
-      if Pwwka.configuration.allow_delayed?
-        channel_connector.delayed_queue.delete
-        channel_connector.delayed_exchange.delete
-      end
-
+      channel_connector.teardown
       channel_connector.connection_close
     end
 

@@ -8,7 +8,7 @@ module Pwwka
     # The channel_connector starts the connection to the message_bus
     # so it should only be instantiated by a method that has a strategy
     # for closing the connection
-    def initialize(prefetch: nil, connection_name: nil)
+    def initialize(prefetch: nil, connection_name: nil, queue_name: nil)
       @configuration     = Pwwka.configuration
       connection_options = {automatically_recover: false}.merge(configuration.options)
       connection_options = {client_properties: {connection_name: connection_name}}.merge(connection_options) if connection_name
@@ -16,6 +16,7 @@ module Pwwka
                                   connection_options)
       @connection.start
       @channel           = @connection.create_channel
+      @queue_name        = queue_name
       if prefetch
         @channel.prefetch(prefetch.to_i)
       end
@@ -72,6 +73,38 @@ module Pwwka
     def connection_close
       channel.close
       connection.close
+    end
+
+    def bind(routing_key:)
+      queue.bind(topic_exchange, routing_key: routing_key)
+    end
+
+    # This method is only used by the test_handler code
+    def pop
+      queue.pop
+    end
+
+    def purge
+      queue.purge
+      delayed_queue.purge if configuration.allow_delayed?
+    end
+
+    def teardown
+      queue.delete
+      topic_exchange.delete
+      # delayed messages
+      if Pwwka.configuration.allow_delayed?
+        delayed_queue.delete
+        delayed_exchange.delete
+      end
+    end
+
+    private
+
+    attr_reader :queue_name
+
+    def queue
+      @queue ||= channel.queue(queue_name, durable: true)
     end
 
   end
