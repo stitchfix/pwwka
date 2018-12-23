@@ -41,7 +41,7 @@ module Pwwka
       # Since nothing is actually consuming messages on the delayed queue, the only way messages can be removed and
       # sent back to the main exchange is if their TTL expires.  As you can see in Pwwka::Transmitter#send_delayed_message!
       # we set an expiration on the message and send it to the delayed exchange.  This means that the delay time is the TTL,
-      # so the messages sits in the delayed queue until its TTL/delay expires, and then it's sent onto the 
+      # so the messages sits in the delayed queue until its TTL/delay expires, and then it's sent onto the
       # main exchange for everyone to consume.  Thus creating a delay.
       raise_if_delayed_not_allowed
       @delayed_queue ||= begin
@@ -55,9 +55,17 @@ module Pwwka
     end
     alias :create_delayed_queue :delayed_queue
 
+    def publish(payload, publish_options)
+      if publish_options[:expiration]
+        delayed_exchange.publish(payload, publish_options)
+      else
+        topic_exchange.publish(payload, publish_options)
+      end
+    end
+
     def raise_if_delayed_not_allowed
       unless configuration.allow_delayed?
-        raise ConfigurationError, "Delayed messages are not allowed. Update your configuration to allow them." 
+        raise ConfigurationError, "Delayed messages are not allowed. Update your configuration to allow them."
       end
     end
 

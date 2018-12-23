@@ -29,7 +29,7 @@ module Pwwka
       @channel_connector = ChannelConnector.new(connection_name: "p: #{Pwwka.configuration.app_id}")
     end
 
-    # Send an important message that must go through.  This method allows any raised exception 
+    # Send an important message that must go through.  This method allows any raised exception
     # to pass through.
     #
     # payload:: Hash of what you'd like to include in your message
@@ -120,7 +120,7 @@ module Pwwka
         headers: headers
       )
       logf "START Transmitting Message on id[%{id}] %{routing_key} -> %{payload}", id: publish_options.message_id, routing_key: routing_key, payload: payload
-      channel_connector.topic_exchange.publish(payload.to_json, publish_options.to_h)
+      channel_connector.publish(payload.to_json, publish_options.to_h)
       # if it gets this far it has succeeded
       logf "END Transmitting Message on id[%{id}] %{routing_key} -> %{payload}", id: publish_options.message_id, routing_key: routing_key, payload: payload
       true
@@ -140,7 +140,7 @@ module Pwwka
       )
       logf "START Transmitting Delayed Message on id[%{id}] %{routing_key} -> %{payload}", id: publish_options.message_id, routing_key: routing_key, payload: payload
       channel_connector.create_delayed_queue
-      channel_connector.delayed_exchange.publish(payload.to_json,publish_options.to_h)
+      channel_connector.publish(payload.to_json,publish_options.to_h)
       # if it gets this far it has succeeded
       logf "END Transmitting Delayed Message on id[%{id}] %{routing_key} -> %{payload}", id: publish_options.message_id, routing_key: routing_key, payload: payload
       true

@@ -1,9 +1,7 @@
 require 'spec_helper.rb'
 
 describe Pwwka::Transmitter do
-  let(:topic_exchange) { double("topic exchange") }
-  let(:delayed_exchange) { double("delayed exchange") }
-  let(:channel_connector) { instance_double(Pwwka::ChannelConnector, topic_exchange: topic_exchange, delayed_exchange: delayed_exchange) }
+  let(:channel_connector) { instance_double(Pwwka::ChannelConnector) }
   let(:logger) { double(Logger) }
   let(:payload) {
     {
@@ -22,8 +20,7 @@ describe Pwwka::Transmitter do
     allow(logger).to receive(:error)
     allow(Pwwka::ChannelConnector).to receive(:new).with(connection_name: "p: MyAwesomeApp").and_return(channel_connector)
     allow(channel_connector).to receive(:connection_close)
-    allow(topic_exchange).to receive(:publish)
-    allow(delayed_exchange).to receive(:publish)
+    allow(channel_connector).to receive(:publish)
   end
 
   after do
@@ -332,7 +329,7 @@ describe Pwwka::Transmitter do
       let(:error) { 'oh no' }
 
       before do
-        allow(topic_exchange).to receive(:publish).and_raise(error)
+        allow(channel_connector).to receive(:publish).and_raise(error)
       end
 
       it 'should raise the error' do
@@ -351,7 +348,7 @@ describe Pwwka::Transmitter do
       end
 
       it_behaves_like "it sends standard attributes and the payload to the exchange" do
-        let(:exchange) { topic_exchange }
+        let(:exchange) { channel_connector }
       end
     end
 
@@ -370,7 +367,7 @@ describe Pwwka::Transmitter do
       end
 
       it_behaves_like "it sends standard and overridden data to the exchange" do
-        let(:exchange) { topic_exchange }
+        let(:exchange) { channel_connector }
       end
     end
   end
@@ -392,7 +389,7 @@ describe Pwwka::Transmitter do
         let(:error) { 'oh no' }
 
         before do
-          allow(delayed_exchange).to receive(:publish).and_raise(error)
+          allow(channel_connector).to receive(:publish).and_raise(error)
         end
 
         it 'should raise the error' do
@@ -411,11 +408,11 @@ describe Pwwka::Transmitter do
         end
 
         it_behaves_like "it sends standard attributes and the payload to the exchange" do
-          let(:exchange) { delayed_exchange }
+          let(:exchange) { channel_connector }
         end
 
         it "passes an expiration value" do
-          expect(delayed_exchange).to have_received(:publish).with(
+          expect(channel_connector).to have_received(:publish).with(
             payload.to_json,
             hash_including(expiration: 5_000))
         end
@@ -436,7 +433,7 @@ describe Pwwka::Transmitter do
         end
 
         it_behaves_like "it sends standard and overridden data to the exchange" do
-          let(:exchange) { delayed_exchange }
+          let(:exchange) { channel_connector }
         end
       end
     end
@@ -452,4 +449,3 @@ describe Pwwka::Transmitter do
     end
   end
 end
-
