@@ -4,14 +4,14 @@ class IntegrationTestSetup
     @threads ||= {}
   end
 
-  def queues
-    @queues ||= []
+  def channels
+    @channels ||= []
   end
 
   def make_queue_and_setup_receiver(klass,queue_name,routing_key)
-    queue = channel.queue(queue_name, durable: true, arguments: {})
-    queue.bind(topic_exchange, routing_key: routing_key)
-    queues << queue
+    channel_connector = Pwwka::ChannelConnector.new(queue_name: queue_name)
+    channel_connector.bind(routing_key: routing_key)
+    channels << channel_connector
     threads[klass] = Thread.new do
       Pwwka::Receiver.subscribe(klass, queue_name, routing_key: routing_key)
     end
@@ -21,20 +21,10 @@ class IntegrationTestSetup
     threads.each do |_,thread|
       Thread.kill(thread)
     end
-    queues.each do |queue|
-      queue.purge
-      queue.delete
+    channels.each do |channel|
+      channel.purge
+      channel.delete
     end
-  end
-
-  def channel_connector
-    @channel_connector ||= Pwwka::ChannelConnector.new
-  end
-  def channel
-    channel_connector.channel
-  end
-  def topic_exchange
-    channel_connector.topic_exchange
   end
 
 end

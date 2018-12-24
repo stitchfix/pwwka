@@ -24,7 +24,7 @@ test_configuration = TestConfiguration.new(File.join(GEM_ROOT,"docker-compose.ym
 RSpec.configure do |config|
 
   config.expect_with :rspec do |c|
-    c.syntax = [:should,:expect] # should is needed to make a resque helper 
+    c.syntax = [:should,:expect] # should is needed to make a resque helper
                                  # from resqutils work
   end
 
@@ -55,4 +55,3 @@ RSpec.configure do |config|
   config.order = :random
   config.filter_run_excluding :legacy
 end
-

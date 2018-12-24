@@ -50,8 +50,8 @@ describe "sending and receiving messages", :integration do
       expect(FooReceiver.messages_received.size).to eq(1)
       expect(MultiRoutingReceived.messages_received.size).to eq(1)
       expect(OtherFooReceiver.messages_received.size).to eq(1)
-      @testing_setup.queues.each do |queue|
-        expect(queue.message_count).to eq(0)
+      @testing_setup.channels.each do |channel|
+        expect(channel.message_count).to eq(0)
       end
     end
     it "can send a message that is only delivered to some  handlers based on routing key" do
@@ -63,8 +63,8 @@ describe "sending and receiving messages", :integration do
       expect(FooReceiver.messages_received.size).to eq(0)
       expect(MultiRoutingReceived.messages_received.size).to eq(1)
       expect(OtherFooReceiver.messages_received.size).to eq(0)
-      @testing_setup.queues.each do |queue|
-        expect(queue.message_count).to eq(0)
+      @testing_setup.channels.each do |channel|
+        expect(channel.message_count).to eq(0)
       end
     end
   end

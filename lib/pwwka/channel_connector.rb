@@ -89,6 +89,10 @@ module Pwwka
       delayed_queue.purge if configuration.allow_delayed?
     end
 
+    def delete
+      queue.delete
+    end
+
     def teardown
       queue.delete
       topic_exchange.delete
@@ -97,6 +101,28 @@ module Pwwka
         delayed_queue.delete
         delayed_exchange.delete
       end
+    end
+
+    def subscribe(manual_ack: true, block: true, &handler)
+      queue.subscribe(manual_ack: manual_ack, block: block) do |delivery_info, properties, payload|
+        handler.call(delivery_info, properties, payload)
+      end
+    end
+
+    def ack(delivery_tag)
+      channel.acknowledge(delivery_tag, false)
+    end
+
+    def nack(delivery_tag)
+      channel.nack(delivery_tag, false, false)
+    end
+
+    def nack_requeue(delivery_tag)
+      channel.nack(delivery_tag, false, true)
+    end
+
+    def message_count
+      queue.message_count
     end
 
     private

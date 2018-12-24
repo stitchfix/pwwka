@@ -10,9 +10,7 @@ module Pwwka
     def initialize(queue_name, routing_key, prefetch: Pwwka.configuration.default_prefetch)
       @queue_name        = queue_name
       @routing_key       = routing_key
-      @channel_connector = ChannelConnector.new(prefetch: prefetch, connection_name: "c: #{queue_name}")
-      @channel           = @channel_connector.channel
-      @topic_exchange    = @channel_connector.topic_exchange
+      @channel_connector = ChannelConnector.new(prefetch: prefetch, connection_name: "c: #{queue_name}", queue_name: queue_name)
     end
 
     def self.subscribe(handler_klass, queue_name,
@@ -24,7 +22,7 @@ module Pwwka
       receiver  = new(queue_name, routing_key, prefetch: prefetch)
       begin
         info "Receiving on #{queue_name}"
-        receiver.topic_queue.subscribe(manual_ack: true, block: block) do |delivery_info, properties, payload|
+        receiver.connect.subscribe(manual_ack: true, block: block) do |delivery_info, properties, payload|
           begin
             payload = payload_parser.(payload)
             handler_klass.handle!(delivery_info, properties, payload)
@@ -51,40 +49,25 @@ module Pwwka
       return receiver
     end
 
-    def topic_queue
-      @topic_queue ||= begin
-        queue = channel.queue(queue_name, durable: true, arguments: {})
-        routing_key.split(',').each { |k| queue.bind(topic_exchange, routing_key: k) }
-        queue
-      end
+    def connect
+      routing_key.split(',').each { |k|
+        channel_connector.bind(routing_key: k)
+      }
+
+      channel_connector
     end
 
     def ack(delivery_tag)
-      channel.acknowledge(delivery_tag, false)
+      channel_connector.ack(delivery_tag)
     end
 
     def nack(delivery_tag)
-      channel.nack(delivery_tag, false, false)
+      channel_connector.nack(delivery_tag)
     end
 
     def nack_requeue(delivery_tag)
-      channel.nack(delivery_tag, false, true)
+      channel_connector.nack_requeue(delivery_tag)
     end
 
-    def drop_queue
-      topic_queue.purge
-      topic_queue.delete
-    end
-
-    def test_teardown
-      drop_queue
-      topic_exchange.delete
-      channel_connector.connection_close
-    end
-
-    private
-
-    attr_reader :channel
-    attr_reader :topic_exchange
   end
 end
