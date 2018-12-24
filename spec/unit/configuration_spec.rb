@@ -157,7 +157,7 @@ describe Pwwka::Configuration do
 
   describe "#channel_connector_klass" do
     it "is ChannelConnector by default" do
-      expect(configuration.channel_connector_klass).to eq(Pwwka::ChannelConnector)
+      expect(configuration.channel_connector_klass).to eq(Pwwka::ChannelConnectorBunny)
     end
   end
 end

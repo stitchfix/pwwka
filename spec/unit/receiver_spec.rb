@@ -5,7 +5,7 @@ describe Pwwka::Receiver do
   describe "#new" do
     let(:handler_klass) { double('HandlerKlass') }
     let(:channel_connector) { double(
-      Pwwka::ChannelConnector,
+      Pwwka::ChannelConnectorBunny,
       bind: true)}
     let(:queue_name) { 'test_queue_name' }
 
@@ -17,7 +17,7 @@ describe Pwwka::Receiver do
     }
 
     before do
-      allow(Pwwka::ChannelConnector).to receive(:new).and_return(channel_connector)
+      allow(Pwwka::ChannelConnectorBunny).to receive(:new).and_return(channel_connector)
       allow(handler_klass).to receive(:handle!)
       allow(channel_connector).to receive(:connection_close)
       allow(channel_connector).to receive(:subscribe) { handler_klass.handle! }
@@ -25,7 +25,7 @@ describe Pwwka::Receiver do
 
     it 'sets the correct connection_name' do
       subject
-      expect(Pwwka::ChannelConnector).to have_received(:new).with(
+      expect(Pwwka::ChannelConnectorBunny).to have_received(:new).with(
         prefetch: nil,
         connection_name: "c: #{queue_name}",
         queue_name: queue_name)

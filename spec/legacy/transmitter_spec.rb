@@ -48,7 +48,7 @@ describe Pwwka::Transmitter, :legacy do
     end
 
     it "should blow up if exception raised" do
-      expect_any_instance_of(Pwwka::ChannelConnector).to receive(:topic_exchange).and_raise(exception)
+      expect_any_instance_of(Pwwka::ChannelConnectorBunny).to receive(:topic_exchange).and_raise(exception)
       expect {
         Pwwka::Transmitter.new.send_message!(payload, routing_key)
       }.to raise_error(exception)
@@ -83,7 +83,7 @@ describe Pwwka::Transmitter, :legacy do
     end
 
     it "should blow up if exception raised" do
-      expect_any_instance_of(Pwwka::ChannelConnector).to receive(:create_delayed_queue).and_raise(exception)
+      expect_any_instance_of(Pwwka::ChannelConnectorBunny).to receive(:create_delayed_queue).and_raise(exception)
       expect {
         Pwwka::Transmitter.new.send_delayed_message!(payload, routing_key, 1)
       }.to raise_error(exception)
@@ -123,7 +123,7 @@ describe Pwwka::Transmitter, :legacy do
 
     context 'default exception policy' do
       it "should blow up if exception raised" do
-        expect(Pwwka::ChannelConnector).to receive(:new).and_raise(exception)
+        expect(Pwwka::ChannelConnectorBunny).to receive(:new).and_raise(exception)
         expect {
           Pwwka::Transmitter.send_message!(payload, routing_key)
         }.to raise_error(exception)
@@ -131,7 +131,7 @@ describe Pwwka::Transmitter, :legacy do
     end
 
     context 'when on_error: :raise and exception raised' do
-      before(:each) { expect(Pwwka::ChannelConnector).to receive(:new).and_raise(exception) }
+      before(:each) { expect(Pwwka::ChannelConnectorBunny).to receive(:new).and_raise(exception) }
 
       it "should blow up" do
         expect {
@@ -148,7 +148,7 @@ describe Pwwka::Transmitter, :legacy do
 
     context 'when on_error: :ignore and exception raised' do
       before :each do
-        expect(Pwwka::ChannelConnector).to receive(:new).and_raise("blow up")
+        expect(Pwwka::ChannelConnectorBunny).to receive(:new).and_raise("blow up")
       end
       it "should not blow up" do
         Pwwka::Transmitter.send_message!(payload, routing_key, on_error: :ignore)
@@ -167,7 +167,7 @@ describe Pwwka::Transmitter, :legacy do
     context 'when on_error: :resque and exception raised' do
       before :each do
         allow(Resque).to receive(:enqueue_in)
-        expect(Pwwka::ChannelConnector).to receive(:new).and_raise("blow up")
+        expect(Pwwka::ChannelConnectorBunny).to receive(:new).and_raise("blow up")
       end
       it "should return false" do
         expect(Pwwka::Transmitter.send_message!(payload, routing_key, on_error: :resque)).to eq false
@@ -214,7 +214,7 @@ describe Pwwka::Transmitter, :legacy do
       end
 
       it "should enqueue a Resque job if exception raised and on_error: :resque" do
-        expect(Pwwka::ChannelConnector).to receive(:new).and_raise("blow up")
+        expect(Pwwka::ChannelConnectorBunny).to receive(:new).and_raise("blow up")
 
         expect(Resque).to receive(:enqueue_in).
                               with(2, Pwwka::SendMessageAsyncJob, payload, routing_key)
@@ -226,7 +226,7 @@ describe Pwwka::Transmitter, :legacy do
 
 
       it "should enqueue a Resque job if exception raised and on_error: :resque without delay_by" do
-        expect(Pwwka::ChannelConnector).to receive(:new).and_raise("blow up")
+        expect(Pwwka::ChannelConnectorBunny).to receive(:new).and_raise("blow up")
 
         expect(Resque).to receive(:enqueue_in).
                               with(Pwwka::Transmitter::DEFAULT_DELAY_BY_MS/1000, Pwwka::SendMessageAsyncJob, payload, routing_key)
@@ -267,7 +267,7 @@ describe Pwwka::Transmitter, :legacy do
     end
 
     it "should not blow up if exception raised" do
-      expect(Pwwka::ChannelConnector).to receive(:new).and_raise("blow up")
+      expect(Pwwka::ChannelConnectorBunny).to receive(:new).and_raise("blow up")
       Pwwka::Transmitter.send_message_safely(payload, routing_key)
       # check nothing has been queued
       expect(@test_handler.test_queue.pop.compact.count).to eq(0)

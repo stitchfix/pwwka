@@ -1,7 +1,7 @@
 require 'spec_helper.rb'
 
 describe Pwwka::Transmitter do
-  let(:channel_connector) { instance_double(Pwwka::ChannelConnector) }
+  let(:channel_connector) { instance_double(Pwwka::ChannelConnectorBunny) }
   let(:logger) { double(Logger) }
   let(:payload) {
     {
@@ -18,7 +18,7 @@ describe Pwwka::Transmitter do
     allow(logger).to receive(:info)
     allow(logger).to receive(:warn)
     allow(logger).to receive(:error)
-    allow(Pwwka::ChannelConnector).to receive(:new).with(connection_name: "p: MyAwesomeApp").and_return(channel_connector)
+    allow(Pwwka::ChannelConnectorBunny).to receive(:new).with(connection_name: "p: MyAwesomeApp").and_return(channel_connector)
     allow(channel_connector).to receive(:connection_close)
     allow(channel_connector).to receive(:publish)
   end

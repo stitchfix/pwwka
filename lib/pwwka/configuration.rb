@@ -33,7 +33,7 @@ module Pwwka
       @async_job_klass = Pwwka::SendMessageAsyncJob
       @default_prefetch = nil
       @receive_raw_payload = false
-      @channel_connector_klass = Pwwka::ChannelConnector
+      @channel_connector_klass = Pwwka::ChannelConnectorBunny
     end
 
     def keep_alive_on_handler_klass_exceptions?

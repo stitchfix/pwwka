@@ -9,7 +9,7 @@ class IntegrationTestSetup
   end
 
   def make_queue_and_setup_receiver(klass,queue_name,routing_key)
-    channel_connector = Pwwka::ChannelConnector.new(queue_name: queue_name)
+    channel_connector = Pwwka::ChannelConnectorBunny.new(queue_name: queue_name)
     channel_connector.bind(routing_key: routing_key)
     channels << channel_connector
     threads[klass] = Thread.new do
