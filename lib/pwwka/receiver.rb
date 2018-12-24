@@ -10,7 +10,7 @@ module Pwwka
     def initialize(queue_name, routing_key, prefetch: Pwwka.configuration.default_prefetch)
       @queue_name        = queue_name
       @routing_key       = routing_key
-      @channel_connector = ChannelConnector.new(prefetch: prefetch, connection_name: "c: #{queue_name}", queue_name: queue_name)
+      @channel_connector = Pwwka.configuration.channel_connector_klass.new(prefetch: prefetch, connection_name: "c: #{queue_name}", queue_name: queue_name)
     end
 
     def self.subscribe(handler_klass, queue_name,

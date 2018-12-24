@@ -13,7 +13,7 @@ module Pwwka
     attr_reader :channel_connector
 
     def initialize
-      @channel_connector = ChannelConnector.new(queue_name: "test-queue")
+      @channel_connector = Pwwka.configuration.channel_connector_klass.new(queue_name: "test-queue")
     end
 
     # call this method to create the queue used for testing
