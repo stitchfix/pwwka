@@ -23,6 +23,8 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency("activesupport")
   s.add_runtime_dependency("activemodel")
   s.add_runtime_dependency("mono_logger")
+  s.add_runtime_dependency("aws-sdk-sqs")
+  s.add_runtime_dependency("aws-sdk-sns")
   s.add_development_dependency("rake")
   s.add_development_dependency("rspec")
   s.add_development_dependency("resque")
