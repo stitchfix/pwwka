@@ -14,6 +14,8 @@ module Pwwka
     attr_accessor :send_message_resque_backoff_strategy
     attr_accessor :default_prefetch
     attr_accessor :channel_connector_klass
+    attr_accessor :sqs
+    attr_accessor :sns
     attr_reader   :requeue_on_error
     attr_writer   :app_id
     attr_writer   :error_handling_chain
@@ -34,6 +36,8 @@ module Pwwka
       @default_prefetch = nil
       @receive_raw_payload = false
       @channel_connector_klass = Pwwka::ChannelConnectorBunny
+      @sqs = {}
+      @sns = {}
     end
 
     def keep_alive_on_handler_klass_exceptions?
