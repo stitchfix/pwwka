@@ -283,6 +283,46 @@ describe Pwwka::Transmitter do
           end
         end
       end
+
+      context "on_error: :sidekiq" do
+        before do
+          class NullJob
+          end
+          Pwwka.configuration.async_job_klass = NullJob
+        end
+
+        after do
+          Pwwka::configuration.async_job_klass = Pwwka::SendMessageAsyncJob
+        end
+
+        it "queues a Sidekiq job" do
+          allow(NullJob).to receive(:perform_async)
+          described_class.send_message!(payload, routing_key, on_error: :sidekiq)
+          expect(NullJob).to have_received(:perform_async).with(
+            payload,
+            routing_key,
+            {delay_by_ms: 0, headers: nil, message_id: :auto_generate, type: nil}
+          )
+        end
+
+        context "when there is a problem queieing the Sidekiq job" do
+          it "raises the original exception job" do
+            allow(NullJob).to receive(:perform_async).and_raise("NOPE")
+            expect {
+              described_class.send_message!(payload, routing_key, on_error: :sidekiq)
+            }.to raise_error(/OH NOES/)
+          end
+
+          it "logs the Sidekiq error as a warning" do
+            allow(NullJob).to receive(:perform_async).and_raise("NOPE")
+            begin
+              described_class.send_message!(payload,routing_key, on_error: :sidekiq)
+            rescue => ex
+            end
+            expect(logger).to have_received(:warn).with(/NOPE/)
+          end
+        end
+      end
     end
   end
   describe ".send_message_safely" do

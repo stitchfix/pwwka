@@ -3,6 +3,7 @@ require_relative "publish_options"
 begin  # optional dependency
   require 'resque'
   require 'resque-retry'
+  require 'sidekiq'
 rescue LoadError
 end
 
@@ -43,6 +44,7 @@ module Pwwka
     # - :ignore (aka as send_message_safely)
     # - :raise
     # - :resque -- use Resque to try to send the message later
+    # - :sidekiq -- use Sidekiq to try to send the message later
     #
     # Returns true
     #
@@ -77,6 +79,15 @@ module Pwwka
             warn(resque_exception.message)
             raise e
           end
+
+        when :sidekiq
+          begin
+            send_message_async_sidekiq(payload, routing_key, delay_by_ms: delayed ? delay_by || DEFAULT_DELAY_BY_MS : 0)
+          rescue => sidekiq_exception
+            warn(sidekiq_exception.message)
+            raise e
+          end
+
         else # ignore
       end
       false
@@ -96,6 +107,19 @@ module Pwwka
       else
         Resque.enqueue_in(delay_by_ms/1000, job, payload, routing_key, type: type, message_id: message_id, headers: headers)
       end
+    end
+
+    # Use Sidekiq to enqueue the message
+    # - :delay_by_ms:: Integer milliseconds to delay the message. Default is 0.
+    def self.send_message_async_sidekiq(payload, routing_key,
+                                delay_by_ms: 0,
+                                type: nil,
+                                message_id: :auto_generate,
+                                headers: nil)
+      job = Pwwka.configuration.async_job_klass
+      options = { delay_by_ms: delay_by_ms, type: type, message_id: message_id, headers: headers }
+
+      job.perform_async(payload, routing_key, options)
     end
 
     # Send a less important message that doesn't have to go through. This eats

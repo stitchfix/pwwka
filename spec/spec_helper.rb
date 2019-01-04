@@ -16,6 +16,7 @@ require 'active_support/core_ext/hash'
 # an error if missing.  Requiring here so their absence will fail the tests
 require 'resque'
 require 'resque-retry'
+require 'sidekiq'
 
 require 'support/test_configuration'
 
