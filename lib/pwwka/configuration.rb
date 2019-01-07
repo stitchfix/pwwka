@@ -33,7 +33,7 @@ module Pwwka
       @async_job_klass = Pwwka::SendMessageAsyncJob
       @default_prefetch = nil
       @receive_raw_payload = false
-      @process_name = ""
+      @process_name = $0
     end
 
     def keep_alive_on_handler_klass_exceptions?
