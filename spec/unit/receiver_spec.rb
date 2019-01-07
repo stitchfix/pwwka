@@ -26,7 +26,7 @@ describe Pwwka::Receiver do
 
     it 'sets the correct connection_name' do
       subject
-      expect(Pwwka::ChannelConnector).to have_received(:new).with(prefetch: nil, connection_name: "c: #{queue_name}")
+      expect(Pwwka::ChannelConnector).to have_received(:new).with(prefetch: nil, connection_name: "c: MyAwesomeApp my_awesome_process")
     end
 
     it 'closes the conenction on an error' do
