@@ -82,7 +82,12 @@ module Pwwka
 
         when :sidekiq
           begin
-            send_message_async_sidekiq(payload, routing_key, delay_by_ms: delayed ? delay_by || DEFAULT_DELAY_BY_MS : 0)
+            send_message_async(
+              payload,
+              routing_key,
+              delay_by_ms: delayed ? delay_by || DEFAULT_DELAY_BY_MS : 0,
+              queue_with: :sidekiq
+            )
           rescue => sidekiq_exception
             warn(sidekiq_exception.message)
             raise e
@@ -93,33 +98,28 @@ module Pwwka
       false
     end
 
-    # Use Resque to enqueue the message.
+    # Enqueue the message using a background processor.
     # - :delay_by_ms:: Integer milliseconds to delay the message. Default is 0.
+    # - :queue_with:: Which background processes to use, either Resque or Sidekiq. Default is Resque.
     def self.send_message_async(payload, routing_key,
                                 delay_by_ms: 0,
                                 type: nil,
                                 message_id: :auto_generate,
-                                headers: nil)
+                                headers: nil,
+                                queue_with: :resque)
       job = Pwwka.configuration.async_job_klass
-      # Be perhaps too carefully making sure we queue jobs in the legacy way
-      if type == nil && message_id == :auto_generate && headers == nil
-        Resque.enqueue_in(delay_by_ms/1000, job, payload, routing_key)
-      else
-        Resque.enqueue_in(delay_by_ms/1000, job, payload, routing_key, type: type, message_id: message_id, headers: headers)
+
+      if queue_with == :resque
+        # Be perhaps too carefully making sure we queue jobs in the legacy way
+        if type == nil && message_id == :auto_generate && headers == nil
+          Resque.enqueue_in(delay_by_ms/1000, job, payload, routing_key)
+        else
+          Resque.enqueue_in(delay_by_ms/1000, job, payload, routing_key, type: type, message_id: message_id, headers: headers)
+        end
+      elsif queue_with == :sidekiq
+        options = { delay_by_ms: delay_by_ms, type: type, message_id: message_id, headers: headers }
+        job.perform_async(payload, routing_key, options)
       end
-    end
-
-    # Use Sidekiq to enqueue the message
-    # - :delay_by_ms:: Integer milliseconds to delay the message. Default is 0.
-    def self.send_message_async_sidekiq(payload, routing_key,
-                                delay_by_ms: 0,
-                                type: nil,
-                                message_id: :auto_generate,
-                                headers: nil)
-      job = Pwwka.configuration.async_job_klass
-      options = { delay_by_ms: delay_by_ms, type: type, message_id: message_id, headers: headers }
-
-      job.perform_async(payload, routing_key, options)
     end
 
     # Send a less important message that doesn't have to go through. This eats

@@ -305,7 +305,7 @@ describe Pwwka::Transmitter do
           )
         end
 
-        context "when there is a problem queieing the Sidekiq job" do
+        context "when there is a problem queueing the Sidekiq job" do
           it "raises the original exception job" do
             allow(NullJob).to receive(:perform_async).and_raise("NOPE")
             expect {

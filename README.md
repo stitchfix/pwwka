@@ -129,7 +129,7 @@ Pwwka::Transmitter.send_message!(
   * `:raise` - Log the error and raise the exception received from Bunny. (default strategy)
   * `:ignore` - Log the error and return false.
   * `:resque` - Log the error and return false. Also, enqueue a job with Resque to send the message. See `send_message_async` below. **Note, this doesn't guarantee the message will actually be sent—it just guarantees an attempt is made to queue a Resque job [which could fail]**
-  * `:sidekiq` - Log the error and return false. Also, enqueue a job with Sidekiw to send the message. See `send_message_async_sidekiq` below. **Note, this doesn't guarantee the message will actually be sent—it just guarantees an attempt is made to queue a Sidekiq job [which could fail]**. To use this option, you will need to configure Pwwka to use the Sidekiq job for async messaging sending (as opposed to the default Resque job):
+  * `:sidekiq` - Log the error and return false. Also, enqueue a job with Sidekiq to send the message. See `send_message_async_sidekiq` below. **Note, this doesn't guarantee the message will actually be sent—it just guarantees an attempt is made to queue a Sidekiq job [which could fail]**. To use this option, you will need to configure Pwwka to use the Sidekiq job for async messaging sending (as opposed to the default Resque job):
 
   ```
   Pwwka.configure do |config|
@@ -187,9 +187,9 @@ end
 
 #### Sending message Async with Sidekiq
 
-To enqueue a message in a background Sidekiq job, use `Transmitter.send_message_async_sidekiq`
+To enqueue a message in a background Sidekiq job, use `Transmitter.send_message_async` with the `queue_with:` option set to `:sidekiq`.
 ```ruby
-Pwwka::Transmitter.send_message_async_sidekiq(payload, routing_key, delay_by_ms: 5000) # default delay is 0
+Pwwka::Transmitter.send_message_async(payload, routing_key, delay_by_ms: 5000, queue_with: :sidekiq)
 ```
 
 To use this, you will need to configure Pwwka to use the Sidekiq job for async messaging sending (as opposed to the default Resque job):
