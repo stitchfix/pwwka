@@ -1,5 +1,7 @@
 module Pwwka
   class ChannelConnector
+    extend Pwwka::Logging
+    include Pwwka::Logging
 
     attr_reader :connection
     attr_reader :configuration
@@ -12,13 +14,16 @@ module Pwwka
       @configuration     = Pwwka.configuration
       connection_options = {automatically_recover: false}.merge(configuration.options)
       connection_options = {client_properties: {connection_name: connection_name}}.merge(connection_options) if connection_name
-      @connection        = Bunny.new(configuration.rabbit_mq_host,
-                                  connection_options)
+      @connection        = Bunny.new(configuration.rabbit_mq_host, connection_options)
       @connection.start
       @channel           = @connection.create_channel
       if prefetch
         @channel.prefetch(prefetch.to_i)
       end
+    rescue => e
+      logf "ERROR Connecting to RabbitMQ", error: e
+      @connection.close if @connection
+      raise e
     end
 
     def topic_exchange
