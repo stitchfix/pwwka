@@ -23,6 +23,7 @@ module Pwwka
     rescue => e
       logf "ERROR Connecting to RabbitMQ", error: e
       @connection.close if @connection
+      raise e
     end
 
     def topic_exchange

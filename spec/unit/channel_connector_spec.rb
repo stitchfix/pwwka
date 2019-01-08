@@ -51,8 +51,16 @@ describe Pwwka::ChannelConnector do
         allow(bunny_session).to receive(:start).and_raise("Connection Error!")
       end
       it "closes the connection" do
-        described_class.new
+        begin
+          described_class.new
+        rescue => ex
+        end
         expect(bunny_session).to have_received(:close)
+      end
+      it "raises an error" do
+        expect {
+          described_class.new
+        }.to raise_error(/Connection Error!/)
       end
     end
 
