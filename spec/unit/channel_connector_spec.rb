@@ -12,6 +12,7 @@ describe Pwwka::ChannelConnector do
     before do
       allow(Bunny).to receive(:new).and_return(bunny_session)
       allow(bunny_session).to receive(:start)
+      allow(bunny_session).to receive(:close)
       allow(bunny_session).to receive(:create_channel).and_return(bunny_channel)
     end
 
@@ -43,6 +44,24 @@ describe Pwwka::ChannelConnector do
         {:automatically_recover=>false, :allow_delayed=>true})
 
       described_class.new
+    end
+
+    context "error during connection start" do
+      before do
+        allow(bunny_session).to receive(:start).and_raise("Connection Error!")
+      end
+      it "closes the connection" do
+        begin
+          described_class.new
+        rescue => ex
+        end
+        expect(bunny_session).to have_received(:close)
+      end
+      it "raises an error" do
+        expect {
+          described_class.new
+        }.to raise_error(/Connection Error!/)
+      end
     end
 
   end

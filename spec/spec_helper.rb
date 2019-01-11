@@ -37,6 +37,7 @@ RSpec.configure do |config|
       c.requeue_on_error           = false
       c.rabbit_mq_host             = "amqp://guest:guest@localhost:#{test_configuration.rabbit_port}"
       c.app_id                     = "MyAwesomeApp"
+      c.process_name               = "my_awesome_process"
 
       unless ENV["SHOW_PWWKA_LOG"] == "true"
         c.logger = MonoLogger.new("/dev/null")

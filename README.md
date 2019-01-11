@@ -38,6 +38,7 @@ Pwwka.configure do |config|
   config.options               = {allow_delayed: true}
   config.requeue_on_error      = true
   config.default_prefetch      = 10
+  config.process_name          = "my-process-name"
 end
 ```
 

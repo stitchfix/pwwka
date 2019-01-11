@@ -14,6 +14,7 @@ module Pwwka
     attr_accessor :background_job_processor
     attr_accessor :send_message_resque_backoff_strategy
     attr_accessor :default_prefetch
+    attr_accessor :process_name
     attr_reader   :requeue_on_error
     attr_writer   :app_id
     attr_writer   :async_job_klass
@@ -34,6 +35,7 @@ module Pwwka
       @background_job_processor = :resque
       @default_prefetch = nil
       @receive_raw_payload = false
+      @process_name = ""
     end
 
     def keep_alive_on_handler_klass_exceptions?
