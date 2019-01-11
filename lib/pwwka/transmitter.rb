@@ -44,7 +44,7 @@ module Pwwka
     # - :ignore (aka as send_message_safely)
     # - :raise
     # - :resque -- use Resque to try to send the message later
-    # - :sidekiq -- use Sidekiq to try to send the message later
+    # - :retry_async -- use the configured background job processor to retry sending the message later
     #
     # Returns true
     #
@@ -80,16 +80,11 @@ module Pwwka
             raise e
           end
 
-        when :sidekiq
+        when :retry_async
           begin
-            send_message_async(
-              payload,
-              routing_key,
-              delay_by_ms: delayed ? delay_by || DEFAULT_DELAY_BY_MS : 0,
-              queue_with: :sidekiq
-            )
-          rescue => sidekiq_exception
-            warn(sidekiq_exception.message)
+            send_message_async(payload, routing_key, delay_by_ms: delayed ? delay_by || DEFAULT_DELAY_BY_MS : 0)
+          rescue => exception
+            warn(exception.message)
             raise e
           end
 
@@ -98,25 +93,24 @@ module Pwwka
       false
     end
 
-    # Enqueue the message using a background processor.
+    # Enqueue the message with the configured background processor.
     # - :delay_by_ms:: Integer milliseconds to delay the message. Default is 0.
-    # - :queue_with:: Which background processes to use, either Resque or Sidekiq. Default is Resque.
     def self.send_message_async(payload, routing_key,
                                 delay_by_ms: 0,
                                 type: nil,
                                 message_id: :auto_generate,
-                                headers: nil,
-                                queue_with: :resque)
+                                headers: nil)
+      background_job_processor = Pwwka.configuration.background_job_processor
       job = Pwwka.configuration.async_job_klass
 
-      if queue_with == :resque
+      if background_job_processor == :resque
         # Be perhaps too carefully making sure we queue jobs in the legacy way
         if type == nil && message_id == :auto_generate && headers == nil
           Resque.enqueue_in(delay_by_ms/1000, job, payload, routing_key)
         else
           Resque.enqueue_in(delay_by_ms/1000, job, payload, routing_key, type: type, message_id: message_id, headers: headers)
         end
-      elsif queue_with == :sidekiq
+      elsif background_job_processor == :sidekiq
         options = { delay_by_ms: delay_by_ms, type: type, message_id: message_id, headers: headers }
         job.perform_async(payload, routing_key, options)
       end

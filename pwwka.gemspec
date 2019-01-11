@@ -31,5 +31,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency("simplecov")
   s.add_development_dependency("resqutils")
   s.add_development_dependency("rainbow")
-  s.add_development_dependency('rspec_junit_formatter')
+  s.add_development_dependency("rspec_junit_formatter")
+  s.add_development_dependency("pry-byebug")
 end

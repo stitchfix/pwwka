@@ -3,6 +3,7 @@ GEM_ROOT = File.expand_path(File.join(File.dirname(__FILE__),'..'))
 ENV['RAILS_ENV']  ||= 'test'
 
 require 'simplecov'
+require 'pry-byebug'
 
 SimpleCov.start do
   add_filter "/spec/"

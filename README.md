@@ -128,12 +128,12 @@ Pwwka::Transmitter.send_message!(
 
   * `:raise` - Log the error and raise the exception received from Bunny. (default strategy)
   * `:ignore` - Log the error and return false.
-  * `:resque` - Log the error and return false. Also, enqueue a job with Resque to send the message. See `send_message_async` below. **Note, this doesn't guarantee the message will actually be sent—it just guarantees an attempt is made to queue a Resque job [which could fail]**
-  * `:sidekiq` - Log the error and return false. Also, enqueue a job with Sidekiq to send the message. See `send_message_async_sidekiq` below. **Note, this doesn't guarantee the message will actually be sent—it just guarantees an attempt is made to queue a Sidekiq job [which could fail]**. To use this option, you will need to configure Pwwka to use the Sidekiq job for async messaging sending (as opposed to the default Resque job):
+  * `:resque` - Log the error and return false. Also, enqueue a job with Resque to send the message. See `send_message_async` below. **Note, this doesn't guarantee the message will actually be sent—it just guarantees an attempt is made to queue a Resque job [which could fail]**. This is a legacy option and `:retry_async` should be used instead.
+  * `:retry_async` - Log the error and return false. Also, enqueue a job with the configured background job processor (`:resque` or `:sidekiq`). **Note, this doesn't guarantee the message will actually be sent—it just guarantees an attempt is made to queue a background job [which could fail]**. The background job processor will default to Resque, but can be configured to Sidekiq:
 
   ```
   Pwwka.configure do |config|
-    config.async_job_klass = Pwwka::SendMessageAsyncSidekiqJob
+    config.background_job_processor = :sidekiq
   end
   ```
 
@@ -163,44 +163,30 @@ Pwwka::Transmitter.send_message!(payload, routing_key, delayed: true, delay_by: 
 These extra arguments work for all message sending methods - the safe ones, the handling, and the `message_queuer` methods (see below).
 
 
-#### Sending message Async with Resque
-
-To enqueue a message in a background Resque job, use `Transmitter.send_message_async` 
+#### Sending message asynchronously
+To enqueue a message in a background job, use `Pwwka::Transmitter.send_message_async`:
 ```ruby
 Pwwka::Transmitter.send_message_async(payload, routing_key, delay_by_ms: 5000) # default delay is 0
 ```
 
-If `Resque::Plugins::ExponentialBackoff` is available, the job will use it. (Important: Your load/require order is important if you want exponential backoff with the built-in job due to [its error handling](https://github.com/stitchfix/pwwka/blob/713c6003fa6cf52cb4713c02b39fe7ee07ebe2e9/lib/pwwka/send_message_async_job.rb#L8).)
-Customize the backoff intervals using the configuration `send_message_resque_backoff_strategy`.
-The default backoff will retry quickly in case of an intermittent glitch, and then every ten 
-minutes for half an hour.
+The job will be enqueued using the configured background job processor. This will default to Resque, but can be configured to use Sidekiq:
+```
+Pwwka.configure do |config|
+  config.background_job_processor = :sidekiq
+end
+```
 
-The name of the queue created is `pwwka_send_message_async`.
+Regardless of which processor you use, the name of the queue created is `pwwka_send_message_async`.
 
-You can configure Pwwka to use your own custom job using the `async_job_klass` configuration option. Example might be:
-
+You can also configure Pwwka to use your own custom job using the `async_job_klass` configuration option. An example might be:
 ```
 Pwwka.configure do |config|
   config.async_job_klass = YourApp::PwwkaAsyncJob
 end
 ```
 
-#### Sending message Async with Sidekiq
+If you are using Resque and `Resque::Plugins::ExponentialBackoff` is available, the job will use it. (Important: Your load/require order is important if you want exponential backoff with the built-in job due to [its error handling](https://github.com/stitchfix/pwwka/blob/713c6003fa6cf52cb4713c02b39fe7ee07ebe2e9/lib/pwwka/send_message_async_job.rb#L8)). Customize the backoff intervals using the configuration `send_message_resque_backoff_strategy`. The default backoff will retry quickly in case of an intermittent glitch, and then every ten minutes for half an hour
 
-To enqueue a message in a background Sidekiq job, use `Transmitter.send_message_async` with the `queue_with:` option set to `:sidekiq`.
-```ruby
-Pwwka::Transmitter.send_message_async(payload, routing_key, delay_by_ms: 5000, queue_with: :sidekiq)
-```
-
-To use this, you will need to configure Pwwka to use the Sidekiq job for async messaging sending (as opposed to the default Resque job):
-
-```
-Pwwka.configure do |config|
-  config.async_job_klass = Pwwka::SendMessageAsyncSidekiqJob # you can also pass in a custom job here
-end
-```
-
-The name of the queue created is `pwwka_send_message_async`.
 
 
 #### Message Queuer

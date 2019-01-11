@@ -1,5 +1,6 @@
 require 'bunny'
 require 'mono_logger'
+
 module Pwwka
   class ConfigurationError < StandardError; end
   class Configuration
@@ -10,11 +11,12 @@ module Pwwka
     attr_accessor :logger
     attr_accessor :log_level
     attr_accessor :options
-    attr_accessor :async_job_klass
+    attr_accessor :background_job_processor
     attr_accessor :send_message_resque_backoff_strategy
     attr_accessor :default_prefetch
     attr_reader   :requeue_on_error
     attr_writer   :app_id
+    attr_writer   :async_job_klass
     attr_writer   :error_handling_chain
 
     def initialize
@@ -29,7 +31,7 @@ module Pwwka
                                                600, 600, 600] # longer-term outage?
       @requeue_on_error = false
       @keep_alive_on_handler_klass_exceptions = false
-      @async_job_klass = Pwwka::SendMessageAsyncJob
+      @background_job_processor = :resque
       @default_prefetch = nil
       @receive_raw_payload = false
     end
@@ -52,6 +54,10 @@ module Pwwka
       else
         @app_id
       end
+    end
+
+    def async_job_klass
+      @async_job_klass || background_jobs[background_job_processor]
     end
 
     def payload_logging
@@ -136,6 +142,15 @@ module Pwwka
     def omit_payload_from_log?(level_of_message_with_payload)
       return true if @receive_raw_payload
       Pwwka::Logging::LEVELS[Pwwka.configuration.payload_logging.to_sym] > Pwwka::Logging::LEVELS[level_of_message_with_payload.to_sym]
+    end
+
+    private
+
+    def background_jobs
+      {
+        resque: Pwwka::SendMessageAsyncJob,
+        sidekiq: Pwwka::SendMessageAsyncSidekiqJob,
+      }
     end
   end
 end

@@ -33,41 +33,91 @@ describe Pwwka::Transmitter do
   subject(:transmitter) { described_class.new }
 
   describe ".send_message_async" do
-    before do
-      allow(Resque).to receive(:enqueue_in)
-    end
-    context "with only basic required arguments" do
-      it "queues a Resque job with no extra args" do
-        delay_by_ms = 3_000
-        described_class.send_message_async(payload,routing_key,delay_by_ms: delay_by_ms)
-        expect(Resque).to have_received(:enqueue_in).with(delay_by_ms/1_000,Pwwka::SendMessageAsyncJob,payload,routing_key)
+    context "when configured background_job_processor is Resque" do
+      before do
+        allow(Resque).to receive(:enqueue_in)
+      end
+      context "with only basic required arguments" do
+        it "queues a Resque job with no extra args" do
+          delay_by_ms = 3_000
+          described_class.send_message_async(payload,routing_key,delay_by_ms: delay_by_ms)
+          expect(Resque).to have_received(:enqueue_in).with(delay_by_ms/1_000,Pwwka::SendMessageAsyncJob,payload,routing_key)
+        end
+      end
+      context "with everything overridden" do
+        it "queues a Resque job with the various arguments" do
+          delay_by_ms = 3_000
+          described_class.send_message_async(
+            payload,routing_key,
+            delay_by_ms: delay_by_ms,
+            message_id: "snowflake id that is likely a bad idea, but if you must",
+            type: "Customer",
+            headers: {
+              "custom" => "value",
+              "other_custom" => "other_value",
+            }
+          )
+          expect(Resque).to have_received(:enqueue_in).with(
+            delay_by_ms/1_000,
+            Pwwka::SendMessageAsyncJob,
+            payload,
+            routing_key,
+            message_id: "snowflake id that is likely a bad idea, but if you must",
+            type: "Customer",
+            headers: {
+              "custom" => "value",
+              "other_custom" => "other_value",
+            }
+          )
+        end
       end
     end
-    context "with everything overridden" do
-      it "queues a Resque job with the various arguments" do
-        delay_by_ms = 3_000
-        described_class.send_message_async(
-          payload,routing_key,
-          delay_by_ms: delay_by_ms,
-          message_id: "snowflake id that is likely a bad idea, but if you must",
-          type: "Customer",
-          headers: {
-            "custom" => "value",
-            "other_custom" => "other_value",
-          }
-        )
-        expect(Resque).to have_received(:enqueue_in).with(
-          delay_by_ms/1_000,
-          Pwwka::SendMessageAsyncJob,
-          payload,
-          routing_key,
-          message_id: "snowflake id that is likely a bad idea, but if you must",
-          type: "Customer",
-          headers: {
-            "custom" => "value",
-            "other_custom" => "other_value",
-          }
-        )
+
+    context "when the configured background_job_processor is Sidekiq" do
+      before do
+        allow(Pwwka::SendMessageAsyncSidekiqJob).to receive(:perform_async)
+        Pwwka.configuration.background_job_processor = :sidekiq
+      end
+
+      after do
+        Pwwka::configuration.background_job_processor = :resque
+      end
+
+      context "with only basic required arguments" do
+        it "queues a Sidekiq job with no extra arguments" do
+          options = { delay_by_ms: 3_000, type: nil, message_id: :auto_generate, headers: nil}
+          described_class.send_message_async(payload, routing_key, delay_by_ms: 3_000)
+          expect(Pwwka::SendMessageAsyncSidekiqJob).to have_received(:perform_async)
+            .with(payload, routing_key, options)
+        end
+      end
+
+      context "with everything overridden" do
+        it "queues a Sidekiq job with the various arguments" do
+          described_class.send_message_async(
+            payload,routing_key,
+            delay_by_ms: 3_000,
+            message_id: "snowflake id that is likely a bad idea, but if you must",
+            type: "Customer",
+            headers: {
+              "custom" => "value",
+              "other_custom" => "other_value",
+            }
+          )
+          expect(Pwwka::SendMessageAsyncSidekiqJob).to have_received(:perform_async).with(
+            payload,
+            routing_key,
+            {
+              delay_by_ms: 3_000,
+              type: "Customer",
+              message_id: "snowflake id that is likely a bad idea, but if you must",
+               headers: {
+                "custom" => "value",
+                "other_custom" => "other_value",
+              }
+            }
+          )
+        end
       end
     end
   end
@@ -284,42 +334,77 @@ describe Pwwka::Transmitter do
         end
       end
 
-      context "on_error: :sidekiq" do
-        before do
-          class NullJob
-          end
-          Pwwka.configuration.async_job_klass = NullJob
-        end
-
-        after do
-          Pwwka::configuration.async_job_klass = Pwwka::SendMessageAsyncJob
-        end
-
-        it "queues a Sidekiq job" do
-          allow(NullJob).to receive(:perform_async)
-          described_class.send_message!(payload, routing_key, on_error: :sidekiq)
-          expect(NullJob).to have_received(:perform_async).with(
-            payload,
-            routing_key,
-            {delay_by_ms: 0, headers: nil, message_id: :auto_generate, type: nil}
-          )
-        end
-
-        context "when there is a problem queueing the Sidekiq job" do
-          it "raises the original exception job" do
-            allow(NullJob).to receive(:perform_async).and_raise("NOPE")
-            expect {
-              described_class.send_message!(payload, routing_key, on_error: :sidekiq)
-            }.to raise_error(/OH NOES/)
-          end
-
-          it "logs the Sidekiq error as a warning" do
-            allow(NullJob).to receive(:perform_async).and_raise("NOPE")
-            begin
-              described_class.send_message!(payload,routing_key, on_error: :sidekiq)
-            rescue => ex
+      context "on_error: :retry_async" do
+        context "when configured background_job_processor is Resque" do
+          context "when the job is queued successfully" do
+            before do
+              allow(Resque).to receive(:enqueue_in)
             end
-            expect(logger).to have_received(:warn).with(/NOPE/)
+
+            it "queues a Resque job" do
+              described_class.send_message!(payload, routing_key, on_error: :retry_async)
+              expect(Resque).to have_received(:enqueue_in).with(0, Pwwka::SendMessageAsyncJob, payload, routing_key)
+            end
+          end
+
+          context "when there is a problem queueing the Resque job" do
+            before do
+              allow(Resque).to receive(:enqueue_in).and_raise("NOPE")
+            end
+
+            it "raises the original exception job" do
+              expect {
+                described_class.send_message!(payload,routing_key, on_error: :retry_async)
+              }.to raise_error(/OH NOES/)
+            end
+
+            it "logs the Resque error as a warning" do
+              begin
+                described_class.send_message!(payload,routing_key, on_error: :resque)
+              rescue => ex
+              end
+              expect(logger).to have_received(:warn).with(/NOPE/)
+            end
+          end
+        end
+
+        context "when configured background_job_processor is Sidekiq" do
+          before do
+            Pwwka.configuration.background_job_processor = :sidekiq
+          end
+
+          after do
+            Pwwka::configuration.background_job_processor = :resque
+          end
+
+          context "when the job is queued sucessfully" do
+            it "queues a Sidekiq job" do
+              allow(Pwwka::SendMessageAsyncSidekiqJob).to receive(:perform_async)
+              described_class.send_message!(payload, routing_key, on_error: :retry_async)
+              expect(Pwwka::SendMessageAsyncSidekiqJob).to have_received(:perform_async).with(
+                payload,
+                routing_key,
+                {delay_by_ms: 0, headers: nil, message_id: :auto_generate, type: nil}
+              )
+            end
+          end
+
+          context "when there is a problem queueing the Sidekiq job" do
+            it "raises the original exception job" do
+              allow(Pwwka::SendMessageAsyncSidekiqJob).to receive(:perform_async).and_raise("NOPE")
+              expect {
+                described_class.send_message!(payload, routing_key, on_error: :retry_async)
+              }.to raise_error(/OH NOES/)
+            end
+
+            it "logs the Sidekiq error as a warning" do
+              allow(Pwwka::SendMessageAsyncSidekiqJob).to receive(:perform_async).and_raise("NOPE")
+              begin
+                described_class.send_message!(payload,routing_key, on_error: :retry_async)
+              rescue => ex
+              end
+              expect(logger).to have_received(:warn).with(/NOPE/)
+            end
           end
         end
       end
