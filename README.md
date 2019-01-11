@@ -128,8 +128,7 @@ Pwwka::Transmitter.send_message!(
 
   * `:raise` - Log the error and raise the exception received from Bunny. (default strategy)
   * `:ignore` - Log the error and return false.
-  * `:resque` - Log the error and return false. Also, enqueue a job with Resque to send the message. See `send_message_async` below. **Note, this doesn't guarantee the message will actually be sent—it just guarantees an attempt is made to queue a Resque job [which could fail]**. This is a legacy option and `:retry_async` should be used instead.
-  * `:retry_async` - Log the error and return false. Also, enqueue a job with the configured background job processor (`:resque` or `:sidekiq`). **Note, this doesn't guarantee the message will actually be sent—it just guarantees an attempt is made to queue a background job [which could fail]**. The background job processor will default to Resque, but can be configured to Sidekiq:
+  * `:retry_async` - Log the error and return false. Also, enqueue a job with the configured background job processor (`:resque` or `:sidekiq`). **Note, this doesn't guarantee the message will actually be sent— it just guarantees an attempt is made to queue a background job [which could fail]**. The background job processor will default to Resque, but can be configured to Sidekiq:
 
   ```
   Pwwka.configure do |config|

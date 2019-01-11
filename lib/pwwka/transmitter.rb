@@ -72,15 +72,7 @@ module Pwwka
         when :raise
           raise e
 
-        when :resque
-          begin
-            send_message_async(payload, routing_key, delay_by_ms: delayed ? delay_by || DEFAULT_DELAY_BY_MS : 0)
-          rescue => resque_exception
-            warn(resque_exception.message)
-            raise e
-          end
-
-        when :retry_async
+        when :resque, :retry_async
           begin
             send_message_async(payload, routing_key, delay_by_ms: delayed ? delay_by || DEFAULT_DELAY_BY_MS : 0)
           rescue => exception
