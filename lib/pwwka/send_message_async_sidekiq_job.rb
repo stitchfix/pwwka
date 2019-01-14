@@ -1,3 +1,5 @@
+require 'sidekiq'
+
 module Pwwka
   class SendMessageAsyncSidekiqJob
     include Sidekiq::Worker
