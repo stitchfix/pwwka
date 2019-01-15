@@ -30,5 +30,5 @@ require 'pwwka/transmitter'
 require 'pwwka/message_queuer'
 require 'pwwka/error_handlers'
 require 'pwwka/configuration'
+require 'pwwka/send_message_async_sidekiq_job'
 require 'pwwka/send_message_async_job'
-

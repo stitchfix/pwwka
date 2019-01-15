@@ -155,4 +155,32 @@ describe Pwwka::Configuration do
     end
   end
 
+  describe "#background_job_processor" do
+    it "is :resque by default" do
+      expect(configuration.background_job_processor).to eq(:resque)
+    end
+
+    it "can be overridden" do
+      configuration.background_job_processor = :sidekiq
+      expect(configuration.background_job_processor).to eq(:sidekiq)
+    end
+  end
+
+  describe "#async_job_klass" do
+    it "is SendMessageAsyncJob by default" do
+      expect(configuration.async_job_klass).to eq(Pwwka::SendMessageAsyncJob)
+    end
+
+    it "is SendMessageAsyncSidekiqJob when background_job_processor=:sidekiq" do
+      configuration.background_job_processor = :sidekiq
+      expect(configuration.async_job_klass).to eq(Pwwka::SendMessageAsyncSidekiqJob)
+    end
+
+    it "can be configured to a custom class" do
+      class CustomBackgroundJob
+      end
+      configuration.async_job_klass = CustomBackgroundJob
+      expect(configuration.async_job_klass).to eq(CustomBackgroundJob)
+    end
+  end
 end

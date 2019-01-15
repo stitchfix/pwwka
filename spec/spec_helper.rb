@@ -3,6 +3,7 @@ GEM_ROOT = File.expand_path(File.join(File.dirname(__FILE__),'..'))
 ENV['RAILS_ENV']  ||= 'test'
 
 require 'simplecov'
+require 'pry-byebug'
 
 SimpleCov.start do
   add_filter "/spec/"
@@ -16,6 +17,7 @@ require 'active_support/core_ext/hash'
 # an error if missing.  Requiring here so their absence will fail the tests
 require 'resque'
 require 'resque-retry'
+require 'sidekiq'
 
 require 'support/test_configuration'
 
