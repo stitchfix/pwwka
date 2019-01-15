@@ -3,7 +3,6 @@ require_relative "publish_options"
 begin  # optional dependency
   require 'resque'
   require 'resque-retry'
-  require 'sidekiq'
 rescue LoadError
 end
 

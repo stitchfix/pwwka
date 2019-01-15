@@ -31,7 +31,4 @@ require 'pwwka/message_queuer'
 require 'pwwka/error_handlers'
 require 'pwwka/configuration'
 require 'pwwka/send_message_async_job'
-begin  # optional dependency
-  require 'pwwka/send_message_async_sidekiq_job'
-rescue LoadError
-end
+require 'pwwka/send_message_async_sidekiq_job'
