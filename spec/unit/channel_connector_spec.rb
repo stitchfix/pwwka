@@ -14,12 +14,18 @@ describe Pwwka::ChannelConnector do
       allow(bunny_session).to receive(:start)
       allow(bunny_session).to receive(:close)
       allow(bunny_session).to receive(:create_channel).and_return(bunny_channel)
+      allow(bunny_channel).to receive(:on_error)
     end
 
     it "sets a prefetch value if configured to do so" do
       expect(bunny_channel).to receive(:prefetch).with(10)
 
       described_class.new(prefetch: 10)
+    end
+
+    it "sets an on_error handler" do
+      expect(bunny_channel).to receive(:on_error)
+      described_class.new
     end
 
     it "does not set a prefetch value unless configured" do
@@ -67,10 +73,14 @@ describe Pwwka::ChannelConnector do
   end
 
   describe "raise_if_delayed_not_allowed" do
+    let(:bunny_channel) { instance_double(Bunny::Channel) }
+
     before do
       allow(Bunny).to receive(:new).and_return(bunny_session)
       allow(bunny_session).to receive(:start)
-      allow(bunny_session).to receive(:create_channel)
+      allow(bunny_session).to receive(:close)
+      allow(bunny_session).to receive(:create_channel).and_return(bunny_channel)
+      allow(bunny_channel).to receive(:on_error)
       @default_allow_delayed = Pwwka.configuration.options[:allow_delayed]
     end
 
