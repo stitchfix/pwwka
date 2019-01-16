@@ -19,7 +19,8 @@ module Pwwka
         @connection = Bunny.new(configuration.rabbit_mq_host, connection_options)
         @connection.start
       rescue => e
-        logf "ERROR Connecting to RabbitMQ", error: e
+        logf "ERROR Connecting to RabbitMQ: #{e}", at: :error
+
         @connection.close if @connection
         raise e
       end
@@ -30,7 +31,7 @@ module Pwwka
           logf "ERROR On RabbitMQ channel: #{method.inspect}"
         end
       rescue => e
-        logf "ERROR Opening RabbitMQ channel", error: e
+        logf "ERROR Opening RabbitMQ channel: #{e}", at: :error
         @connection.close if @connection
         raise e
       end
@@ -84,14 +85,13 @@ module Pwwka
       begin
         channel.close
       rescue => e
-        logf "ERROR Closing RabbitMQ channel", error: e
-        raise e
+        logf "ERROR Closing RabbitMQ channel: #{e}", at: :error
       end
 
       begin
         connection.close
       rescue => e
-        logf "ERROR Closing connection to RabbitMQ", error: e
+        logf "ERROR Closing connection to RabbitMQ: #{e}", at: :error
         raise e
       end
     end
