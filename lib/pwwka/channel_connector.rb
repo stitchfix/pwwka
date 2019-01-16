@@ -86,6 +86,7 @@ module Pwwka
         channel.close
       rescue => e
         logf "ERROR Closing RabbitMQ channel: #{e}", at: :error
+        raise e
       end
 
       begin
