@@ -14,16 +14,27 @@ module Pwwka
       @configuration     = Pwwka.configuration
       connection_options = {automatically_recover: false}.merge(configuration.options)
       connection_options = {client_properties: {connection_name: connection_name}}.merge(connection_options) if connection_name
-      @connection        = Bunny.new(configuration.rabbit_mq_host, connection_options)
-      @connection.start
-      @channel           = @connection.create_channel
+
+      begin
+        @connection = Bunny.new(configuration.rabbit_mq_host, connection_options)
+        @connection.start
+      rescue => e
+        logf "ERROR Connecting to RabbitMQ", error: e
+        @connection.close if @connection
+        raise e
+      end
+
+      begin
+        @channel = @connection.create_channel
+      rescue => e
+        logf "ERROR Opening RabbitMQ channel", error: e
+        @connection.close if @connection
+        raise e
+      end
+
       if prefetch
         @channel.prefetch(prefetch.to_i)
       end
-    rescue => e
-      logf "ERROR Connecting to RabbitMQ", error: e
-      @connection.close if @connection
-      raise e
     end
 
     def topic_exchange
@@ -67,9 +78,19 @@ module Pwwka
     end
 
     def connection_close
-      channel.close
-      connection.close
-    end
+      begin
+        channel.close
+      rescue => e
+        logf "ERROR Closing RabbitMQ channel", error: e
+        raise e
+      end
 
+      begin
+        connection.close
+      rescue => e
+        logf "ERROR Closing connection to RabbitMQ", error: e
+        raise e
+      end
+    end
   end
 end
