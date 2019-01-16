@@ -26,6 +26,9 @@ module Pwwka
 
       begin
         @channel = @connection.create_channel
+        @channel.on_error do |ch, method|
+          logf "ERROR On RabbitMQ channel: #{method.inspect}"
+        end
       rescue => e
         logf "ERROR Opening RabbitMQ channel", error: e
         @connection.close if @connection
