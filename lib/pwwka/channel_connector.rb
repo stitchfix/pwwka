@@ -22,6 +22,7 @@ module Pwwka
         logf "ERROR Connecting to RabbitMQ: #{e}", at: :error
 
         @connection.close if @connection
+        ActiveSupport::Notifications.instrument('pwwka.connection.failed', error: e)
         raise e
       end
 
@@ -29,16 +30,20 @@ module Pwwka
         @channel = @connection.create_channel
         @channel.on_error do |ch, method|
           logf "ERROR On RabbitMQ channel: #{method.inspect}"
+          ActiveSupport::Notifications.instrument('pwwka.connection.error', method: method)
         end
       rescue => e
         logf "ERROR Opening RabbitMQ channel: #{e}", at: :error
         @connection.close if @connection
+        ActiveSupport::Notifications.instrument('pwwka.connection.failed', error: e)
         raise e
       end
 
       if prefetch
         @channel.prefetch(prefetch.to_i)
       end
+
+      ActiveSupport::Notifications.instrument('pwwka.connection.opened', options: connection_options, channel_id: @channel.id)
     end
 
     def topic_exchange
@@ -86,6 +91,7 @@ module Pwwka
         channel.close
       rescue => e
         logf "ERROR Closing RabbitMQ channel: #{e}", at: :error
+        ActiveSupport::Notifications.instrument('pwwka.connection.close_failed', channel_id: channel.id)
         raise e
       end
 
@@ -93,8 +99,11 @@ module Pwwka
         connection.close
       rescue => e
         logf "ERROR Closing connection to RabbitMQ: #{e}", at: :error
+        ActiveSupport::Notifications.instrument('pwwka.connection.close_failed')
         raise e
       end
+
+      ActiveSupport::Notifications.instrument('pwwka.connection.closed', channel_id: channel.id)
     end
   end
 end

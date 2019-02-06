@@ -24,6 +24,7 @@ describe Pwwka::Transmitter do
     allow(channel_connector).to receive(:connection_close)
     allow(topic_exchange).to receive(:publish)
     allow(delayed_exchange).to receive(:publish)
+    allow(ActiveSupport::Notifications).to receive(:instrument).and_call_original
   end
 
   after do
@@ -131,6 +132,17 @@ describe Pwwka::Transmitter do
       it "logs after sending" do
         described_class.send(method,payload,routing_key)
         expect(logger).to have_received(:info).with(/AFTER Transmitting Message on #{routing_key} ->/)
+      end
+      it "emits a pwwka.transmit.send_message notification" do
+        described_class.send(method,payload,routing_key)
+        expect(ActiveSupport::Notifications).to have_received(:instrument).with('pwwka.transmit.send_message', {
+          :routing_key => "sf.foo.bar",
+          :message_id => instance_of(String),
+          :content_type => "application/json; version=1",
+          :persistent => true,
+          :app_id => "MyAwesomeApp",
+          :timestamp => instance_of(Integer)
+        })
       end
     end
     context "using delayed flag" do

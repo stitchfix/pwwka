@@ -28,9 +28,11 @@ module Pwwka
         info "Receiving on #{queue_name}"
         receiver.topic_queue.subscribe(manual_ack: true, block: block) do |delivery_info, properties, payload|
           begin
-            payload = payload_parser.(payload)
-            handler_klass.handle!(delivery_info, properties, payload)
-            receiver.ack(delivery_info.delivery_tag)
+            ActiveSupport::Notifications.instrument('pwwka.receive.handled', delivery_info: delivery_info, properties: properties, payload: payload) do
+              payload = payload_parser.(payload)
+              handler_klass.handle!(delivery_info, properties, payload)
+              receiver.ack(delivery_info.delivery_tag)
+            end
             logf "Processed Message on %{queue_name} -> %{payload}, %{routing_key}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key
           rescue => exception
             Pwwka::ErrorHandlers::Chain.new(

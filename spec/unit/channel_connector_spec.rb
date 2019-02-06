@@ -15,6 +15,7 @@ describe Pwwka::ChannelConnector do
       allow(bunny_session).to receive(:close)
       allow(bunny_session).to receive(:create_channel).and_return(bunny_channel)
       allow(bunny_channel).to receive(:on_error)
+      allow(bunny_channel).to receive(:id).and_return(123)
     end
 
     it "sets a prefetch value if configured to do so" do
@@ -52,6 +53,18 @@ describe Pwwka::ChannelConnector do
       described_class.new
     end
 
+    it "emits a pwwka.connection.opened notification" do
+      expect(ActiveSupport::Notifications).to receive(:instrument).with('pwwka.connection.opened', {
+        :options => {
+          :automatically_recover => false,
+          :allow_delayed => true
+        },
+        :channel_id => 123
+      })
+
+      described_class.new
+    end
+
     context "error during connection start" do
       before do
         allow(bunny_session).to receive(:start).and_raise("Connection Error!")
@@ -68,6 +81,16 @@ describe Pwwka::ChannelConnector do
           described_class.new
         }.to raise_error(/Connection Error!/)
       end
+      it "emits a pwwka.connection.failed notification" do
+        expect(ActiveSupport::Notifications).to receive(:instrument).with('pwwka.connection.failed', {
+          :error => instance_of(RuntimeError)
+        })
+
+        begin
+          described_class.new
+        rescue => ex
+        end
+      end
     end
 
   end
@@ -81,6 +104,7 @@ describe Pwwka::ChannelConnector do
       allow(bunny_session).to receive(:close)
       allow(bunny_session).to receive(:create_channel).and_return(bunny_channel)
       allow(bunny_channel).to receive(:on_error)
+      allow(bunny_channel).to receive(:id).and_return(123)
       @default_allow_delayed = Pwwka.configuration.options[:allow_delayed]
     end
 
