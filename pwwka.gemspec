@@ -26,7 +26,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency("rake")
   s.add_development_dependency("rspec")
   s.add_development_dependency("resque")
-  s.add_development_dependency("resque-retry")
+  s.add_development_dependency("resque-retry", "~> 1.5.3")
   s.add_development_dependency("sidekiq")
   s.add_development_dependency("simplecov")
   s.add_development_dependency("resqutils")
