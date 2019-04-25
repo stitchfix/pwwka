@@ -12,10 +12,8 @@ module Pwwka
   # Example:
   #
   #     # Send a message, blowing up if there's any problem
-  #     Pwwka::Transmitter.send_message!({ user_id: @user.id }, "users.user.activated")
-  #
-  #     # Send a message, logging if there's any problem
-  #     Pwwka::Transmitter.send_message_safely({ user_id: @user.id }, "users.user.activated")
+  #     Pwwka::PersistentTransmitter.batch({ user_id: @user.id }, "users.user.activated")
+
   class PersistentTransmitter
 
     extend Pwwka::Logging
@@ -42,11 +40,12 @@ module Pwwka
       logf "END Transmitting Message on id[%{id}] %{routing_key} -> %{payload}", id: publish_options.message_id, routing_key: routing_key, payload: payload
       true
     end
+    
 
     class << self
         private :new
-        
-        def batch(routing_key, type: nil, headers: nil, message_id: :auto_generate)
+
+        def batch
           transmitter = new
           yield(transmitter)
         ensure
