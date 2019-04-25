@@ -12,7 +12,9 @@ module Pwwka
   # Example:
   #
   #     # Send a message, blowing up if there's any problem
-  #     Pwwka::PersistentTransmitter.batch({ user_id: @user.id }, "users.user.activated")
+  #     Pwwka::PersistentTransmitter.batch do |transmitter|
+  #         transmitter.send_message!({ user_id: @user.id }, "users.user.activated")
+  #     end  
 
   class PersistentTransmitter
 
