@@ -23,10 +23,8 @@ module Pwwka
 
     DEFAULT_DELAY_BY_MS = 5000
 
-    attr_reader :channel_connector
-
-    def initialize
-      @channel_connector = ChannelConnector.new(connection_name: "p: #{Pwwka.configuration.app_id} #{Pwwka.configuration.process_name}".strip)
+    def initialize(connections: Pwwka.connections)
+      @connections = connections
     end
 
     # Send an important message that must go through.  This method allows any raised exception 
@@ -129,17 +127,18 @@ module Pwwka
         headers: headers
       )
       logf "START Transmitting Message on id[%{id}] %{routing_key} -> %{payload}", id: publish_options.message_id, routing_key: routing_key, payload: payload
-      channel_connector.topic_exchange.publish(payload.to_json, publish_options.to_h)
+
+      checkout do |channel_connector|
+        channel_connector.topic_exchange.publish(payload.to_json, publish_options.to_h)
+      end
+
       # if it gets this far it has succeeded
       logf "END Transmitting Message on id[%{id}] %{routing_key} -> %{payload}", id: publish_options.message_id, routing_key: routing_key, payload: payload
       true
-    ensure
-      channel_connector.connection_close
     end
 
 
     def send_delayed_message!(payload, routing_key, delay_by = DEFAULT_DELAY_BY_MS, type: nil, headers: nil, message_id: :auto_generate)
-      channel_connector.raise_if_delayed_not_allowed
       publish_options = Pwwka::PublishOptions.new(
         routing_key: routing_key,
         message_id: message_id,
@@ -147,14 +146,22 @@ module Pwwka
         headers: headers,
         expiration: delay_by
       )
-      logf "START Transmitting Delayed Message on id[%{id}] %{routing_key} -> %{payload}", id: publish_options.message_id, routing_key: routing_key, payload: payload
-      channel_connector.create_delayed_queue
-      channel_connector.delayed_exchange.publish(payload.to_json,publish_options.to_h)
+      checkout do |channel_connector|
+        channel_connector.raise_if_delayed_not_allowed
+        logf "START Transmitting Delayed Message on id[%{id}] %{routing_key} -> %{payload}", id: publish_options.message_id, routing_key: routing_key, payload: payload
+        channel_connector.create_delayed_queue
+        channel_connector.delayed_exchange.publish(payload.to_json,publish_options.to_h)
+      end
+
       # if it gets this far it has succeeded
       logf "END Transmitting Delayed Message on id[%{id}] %{routing_key} -> %{payload}", id: publish_options.message_id, routing_key: routing_key, payload: payload
       true
-    ensure
-      channel_connector.connection_close
+    end
+
+    private
+
+    def checkout(&block)
+      @connections.checkout(connection_name: "p: #{Pwwka.configuration.app_id} #{Pwwka.configuration.process_name}".strip, &block)
     end
 
   end

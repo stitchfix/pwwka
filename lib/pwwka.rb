@@ -9,6 +9,10 @@ module Pwwka
       @configuration ||= Configuration.new
     end
 
+    def connections
+      ChannelConnector
+    end
+
     def environment
       ENV['RAILS_ENV'] || ENV['RACK_ENV'] || 'development'
     end

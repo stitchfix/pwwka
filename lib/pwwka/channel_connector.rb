@@ -7,6 +7,13 @@ module Pwwka
     attr_reader :configuration
     attr_reader :channel
 
+    def self.checkout(**kwargs, &block)
+      conn = new(**kwargs)
+      block.call(conn)
+    ensure
+      conn.connection_close if conn
+    end
+
     # The channel_connector starts the connection to the message_bus
     # so it should only be instantiated by a method that has a strategy
     # for closing the connection
