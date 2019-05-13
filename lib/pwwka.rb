@@ -10,7 +10,8 @@ module Pwwka
     end
 
     def connections
-      ChannelConnector
+      #ChannelConnector
+      ConnectionRepository.instance
     end
 
     def environment
@@ -28,6 +29,7 @@ require 'active_support/hash_with_indifferent_access'
 require 'pwwka/version'
 require 'pwwka/logging'
 require 'pwwka/channel_connector'
+require 'pwwka/connection_repository'
 require 'pwwka/handling'
 require 'pwwka/receiver'
 require 'pwwka/transmitter'
@@ -36,3 +38,4 @@ require 'pwwka/error_handlers'
 require 'pwwka/configuration'
 require 'pwwka/send_message_async_job'
 require 'pwwka/send_message_async_sidekiq_job'
+

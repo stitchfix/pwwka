@@ -17,16 +17,15 @@ describe Pwwka::Receiver do
     }
 
     before do
-      allow(Pwwka::ChannelConnector).to receive(:new).and_return(channel_connector)
+      allow(Pwwka.connections).to receive(:checkout).and_yield(channel_connector)
       allow(handler_klass).to receive(:handle!)
-      allow(channel_connector).to receive(:connection_close)
       allow(queue).to receive(:bind)
       allow(queue).to receive(:subscribe).and_yield({}, {}, '{}')
     end
 
     it 'sets the correct connection_name' do
       subject
-      expect(Pwwka::ChannelConnector).to have_received(:new).with(prefetch: nil, connection_name: "c: MyAwesomeApp my_awesome_process")
+      expect(Pwwka.connections).to have_received(:checkout).with(prefetch: nil, connection_name: "c: MyAwesomeApp my_awesome_process")
     end
 
     it 'logs on interrupt' do

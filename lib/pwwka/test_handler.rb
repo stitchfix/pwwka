@@ -58,7 +58,7 @@ module Pwwka
     end
 
     def purge_test_queue
-      test_queue.purge  
+      test_queue.purge
       channel_connector.delayed_queue.purge if channel_connector.configuration.allow_delayed?
     end
 

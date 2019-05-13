@@ -55,6 +55,9 @@ RSpec.configure do |config|
     example.run
     Pwwka.configuration.receive_raw_payload = false
   end
+  config.after(:each) do |example|
+    Pwwka::ConnectionRepository.reset!
+  end
   config.order = :random
   config.filter_run_excluding :legacy
 end

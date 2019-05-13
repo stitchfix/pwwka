@@ -11,8 +11,8 @@ describe Pwwka::Transmitter do
     }
   }
   let(:routing_key) { "sf.foo.bar" }
-  let(:connection_repository) { class_double(Pwwka::ChannelConnector) }
-  let(:channel) { instance_double(Pwwka::ChannelConnector) }
+  let(:connection_repository) { instance_double(Pwwka::ConnectionRepository) }
+  let(:channel) { instance_double(Pwwka::ConnectionRepository::Channel) }
 
   before do
     @original_logger = Pwwka.configuration.logger
