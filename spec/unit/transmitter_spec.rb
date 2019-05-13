@@ -3,7 +3,6 @@ require 'spec_helper.rb'
 describe Pwwka::Transmitter do
   let(:topic_exchange) { double("topic exchange") }
   let(:delayed_exchange) { double("delayed exchange") }
-  let(:channel_connector) { instance_double(Pwwka::ChannelConnector, topic_exchange: topic_exchange, delayed_exchange: delayed_exchange) }
   let(:logger) { double(Logger) }
   let(:payload) {
     {
@@ -12,7 +11,8 @@ describe Pwwka::Transmitter do
     }
   }
   let(:routing_key) { "sf.foo.bar" }
-
+  let(:connection_repository) { class_double(Pwwka::ChannelConnector) }
+  let(:channel) { instance_double(Pwwka::ChannelConnector) }
 
   before do
     @original_logger = Pwwka.configuration.logger
@@ -20,17 +20,18 @@ describe Pwwka::Transmitter do
     allow(logger).to receive(:info)
     allow(logger).to receive(:warn)
     allow(logger).to receive(:error)
-    allow(Pwwka::ChannelConnector).to receive(:new).with(connection_name: "p: MyAwesomeApp my_awesome_process").and_return(channel_connector)
-    allow(channel_connector).to receive(:connection_close)
     allow(topic_exchange).to receive(:publish)
     allow(delayed_exchange).to receive(:publish)
+    allow(connection_repository).to receive(:checkout).and_yield(channel)
+    allow(channel).to receive(:topic_exchange).and_return(topic_exchange)
+    allow(channel).to receive(:delayed_exchange).and_return(delayed_exchange)
   end
 
   after do
     Pwwka.configuration.logger = @original_logger
   end
 
-  subject(:transmitter) { described_class.new }
+  subject(:transmitter) { described_class.new(connections: connection_repository) }
 
   describe ".send_message_async" do
     context "when configured background_job_processor is Resque" do
@@ -447,11 +448,6 @@ describe Pwwka::Transmitter do
       expect(logger).to have_received(:info).with(/END Transmitting Message on id\[[\w\-\d]+\] #{routing_key} ->/)
     end
 
-    it "closes the channel connector" do
-      transmitter.send_message!(payload,routing_key)
-      expect(channel_connector).to have_received(:connection_close)
-    end
-
     context 'when an error is raised' do
       subject { transmitter.send_message!(payload,routing_key) }
       let(:error) { 'oh no' }
@@ -462,11 +458,6 @@ describe Pwwka::Transmitter do
 
       it 'should raise the error' do
         expect { subject } .to raise_error(error)
-      end
-
-      it 'should close the channel connector' do
-        begin; subject; rescue; end
-        expect(channel_connector).to have_received(:connection_close)
       end
     end
 
@@ -503,13 +494,13 @@ describe Pwwka::Transmitter do
   describe "#send_delayed_message!" do
     context "delayed queue properly configured" do
       before do
-        allow(channel_connector).to receive(:raise_if_delayed_not_allowed)
-        allow(channel_connector).to receive(:create_delayed_queue)
+        allow(channel).to receive(:raise_if_delayed_not_allowed)
+        allow(channel).to receive(:create_delayed_queue)
       end
 
       it "creates the delayed queue" do
         transmitter.send_delayed_message!(payload,routing_key)
-        expect(channel_connector).to have_received(:create_delayed_queue)
+        expect(channel).to have_received(:create_delayed_queue)
       end
 
       context 'when an error is raised' do
@@ -522,11 +513,6 @@ describe Pwwka::Transmitter do
 
         it 'should raise the error' do
           expect { subject } .to raise_error(error)
-        end
-
-        it 'should close the channel connector' do
-          begin; subject; rescue; end
-          expect(channel_connector).to have_received(:connection_close)
         end
       end
 
@@ -567,7 +553,7 @@ describe Pwwka::Transmitter do
     end
     context "delayed queue not configured" do
       before do
-        allow(channel_connector).to receive(:raise_if_delayed_not_allowed).and_raise("NOPE")
+        allow(channel).to receive(:raise_if_delayed_not_allowed).and_raise("NOPE")
       end
       it "blows up" do
         expect {

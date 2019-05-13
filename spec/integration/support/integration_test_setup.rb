@@ -30,11 +30,13 @@ class IntegrationTestSetup
   def channel_connector
     @channel_connector ||= Pwwka::ChannelConnector.new
   end
+
   def channel
-    channel_connector.channel
+    channel_connector.send(:channel)
   end
+
   def topic_exchange
-    channel_connector.topic_exchange
+    channel_connector.send(:topic_exchange)
   end
 
 end
