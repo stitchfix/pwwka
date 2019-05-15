@@ -33,10 +33,16 @@ module Pwwka
 
     # Get the message on the queue as TestHandler::Message
     def pop_message
-      delivery_info, properties, payload = test_queue.pop
-      Message.new(delivery_info,
-                  properties,
-                  payload)
+      # Since publishing happens in a background thread, we might need to wait a little bit.
+      5.times do
+        message = test_queue.pop
+        if message
+          return Message.new(*message)
+        else
+          sleep 0.1
+        end
+      end
+      raise "Failed to retrieve message after 5 tries"
     end
 
     def get_topic_message_payload_for_tests
