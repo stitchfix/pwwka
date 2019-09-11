@@ -75,6 +75,10 @@ describe Pwwka::Configuration do
           def self.application
             MyAmazingApp::Application.new
           end
+
+          def self.version
+            '5.2.0'
+          end
         end
         Object.const_set("Rails",rails)
       end
@@ -97,7 +101,7 @@ describe Pwwka::Configuration do
       it "blows up when not set" do
         expect {
           configuration.app_id
-        }.to raise_error(/'Rails' is defined, but it doesn't respond to #application, so could not derive the app_id; you must explicitly set it/)
+        }.to raise_error(/'Rails' is defined, but it doesn't respond to #application or #version, so could not derive the app_id; you must explicitly set it/)
       end
     end
   end

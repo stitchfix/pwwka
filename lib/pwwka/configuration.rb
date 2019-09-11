@@ -45,10 +45,15 @@ module Pwwka
     def app_id
       if @app_id.to_s.strip == ""
         if defined?(Rails)
-          if Rails.respond_to?(:application)
-            Rails.application.class.parent.name
+          if Rails.respond_to?(:application) && Rails.respond_to?(:version)
+            # Module#module_parent is the preferred technique, but we keep usage
+            # of the deprecated Module#parent for Rails 5 compatibility. see
+            # https://github.com/stitchfix/pwwka/issues/91 for context.
+            app_klass = Rails.application.class
+            app_parent = Rails.version =~ /^6/ ? app_klass.module_parent : app_klass.parent
+            app_parent.name
           else
-            raise "'Rails' is defined, but it doesn't respond to #application, so could not derive the app_id; you must explicitly set it"
+            raise "'Rails' is defined, but it doesn't respond to #application or #version, so could not derive the app_id; you must explicitly set it"
           end
         else
           raise "Could not derive the app_id; you must explicitly set it"
