@@ -37,7 +37,7 @@ jobs:
           fi
     - run:
         name: Notify Pager Duty
-        command: bundle exec y-notify "#eng-platform-alerts"
+        command: bundle exec y-notify "#eng-messaging-ops"
         when: on_fail
     - store_test_results:
         path: "/tmp/test-results"
@@ -61,7 +61,7 @@ jobs:
           fi
     - run:
         name: Notify Pager Duty
-        command: bundle exec y-notify "#eng-platform-alerts"
+        command: bundle exec y-notify "#eng-messaging-ops"
         when: on_fail
     - store_test_results:
         path: "/tmp/test-results"
@@ -85,7 +85,7 @@ jobs:
           fi
     - run:
         name: Notify Pager Duty
-        command: bundle exec y-notify "#eng-platform-alerts"
+        command: bundle exec y-notify "#eng-messaging-ops"
         when: on_fail
     - store_test_results:
         path: "/tmp/test-results"
@@ -109,7 +109,7 @@ jobs:
           fi
     - run:
         name: Notify Pager Duty
-        command: bundle exec y-notify "#eng-platform-alerts"
+        command: bundle exec y-notify "#eng-messaging-ops"
         when: on_fail
     - store_test_results:
         path: "/tmp/test-results"
