@@ -5,7 +5,7 @@ version: 2
 jobs:
   release:
     docker:
-    - image: circleci/ruby:2.6.4
+    - image: circleci/ruby:2.7.0
     steps:
     - checkout
     - run: bundle config stitchfix01.jfrog.io $ARTIFACTORY_USER:$ARTIFACTORY_TOKEN
@@ -17,9 +17,9 @@ jobs:
     - run:
         name: Build/release gem to artifactory
         command: bundle exec rake push_artifactory
-  ruby-2.6.4-rails-6.0:
+  ruby-2.7.0-rails-6.0:
     docker:
-    - image: circleci/ruby:2.6.4
+    - image: circleci/ruby:2.7.0
       environment:
         BUNDLE_GEMFILE: Gemfile.rails-6.0
     - image: redis:2.8.12
@@ -41,9 +41,9 @@ jobs:
         when: on_fail
     - store_test_results:
         path: "/tmp/test-results"
-  ruby-2.5.6-rails-6.0:
+  ruby-2.6.5-rails-6.0:
     docker:
-    - image: circleci/ruby:2.5.6
+    - image: circleci/ruby:2.6.5
       environment:
         BUNDLE_GEMFILE: Gemfile.rails-6.0
     - image: redis:2.8.12
@@ -65,9 +65,9 @@ jobs:
         when: on_fail
     - store_test_results:
         path: "/tmp/test-results"
-  ruby-2.6.4-rails-5.2:
+  ruby-2.7.0-rails-5.2:
     docker:
-    - image: circleci/ruby:2.6.4
+    - image: circleci/ruby:2.7.0
       environment:
         BUNDLE_GEMFILE: Gemfile.rails-5.2
     - image: redis:2.8.12
@@ -89,9 +89,9 @@ jobs:
         when: on_fail
     - store_test_results:
         path: "/tmp/test-results"
-  ruby-2.5.6-rails-5.2:
+  ruby-2.6.5-rails-5.2:
     docker:
-    - image: circleci/ruby:2.5.6
+    - image: circleci/ruby:2.6.5
       environment:
         BUNDLE_GEMFILE: Gemfile.rails-5.2
     - image: redis:2.8.12
@@ -120,31 +120,31 @@ workflows:
     - release:
         context: org-global
         requires:
-        - ruby-2.6.4-rails-6.0
-        - ruby-2.5.6-rails-6.0
-        - ruby-2.6.4-rails-5.2
-        - ruby-2.5.6-rails-5.2
+        - ruby-2.7.0-rails-6.0
+        - ruby-2.6.5-rails-6.0
+        - ruby-2.7.0-rails-5.2
+        - ruby-2.6.5-rails-5.2
         filters:
           tags:
             only: /^[0-9]+\.[0-9]+\.[0-9]+(\.?RC[-\.]?\d*)?$/
           branches:
             ignore: /.*/
-    - ruby-2.6.4-rails-6.0:
+    - ruby-2.7.0-rails-6.0:
         context: org-global
         filters:
           tags:
             only: &1 /.*/
-    - ruby-2.5.6-rails-6.0:
+    - ruby-2.6.5-rails-6.0:
         context: org-global
         filters:
           tags:
             only: *1
-    - ruby-2.6.4-rails-5.2:
+    - ruby-2.7.0-rails-5.2:
         context: org-global
         filters:
           tags:
             only: *1
-    - ruby-2.5.6-rails-5.2:
+    - ruby-2.6.5-rails-5.2:
         context: org-global
         filters:
           tags:
@@ -158,11 +158,11 @@ workflows:
             only:
             - master
     jobs:
-    - ruby-2.6.4-rails-6.0:
+    - ruby-2.7.0-rails-6.0:
         context: org-global
-    - ruby-2.5.6-rails-6.0:
+    - ruby-2.6.5-rails-6.0:
         context: org-global
-    - ruby-2.6.4-rails-5.2:
+    - ruby-2.7.0-rails-5.2:
         context: org-global
-    - ruby-2.5.6-rails-5.2:
+    - ruby-2.6.5-rails-5.2:
         context: org-global
