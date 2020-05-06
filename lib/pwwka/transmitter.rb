@@ -73,7 +73,10 @@ module Pwwka
 
         when :resque, :retry_async
           begin
-            send_message_async(payload, routing_key, delay_by_ms: delayed ? delay_by || DEFAULT_DELAY_BY_MS : 0)
+            # Both #send_delayed_message! and #send_message! both implicitly call #to_json on the payload.
+            # Adding this here to ensure that we have the same behavior when we have to switch over
+            # to async sending.
+            send_message_async(payload.to_json, routing_key, delay_by_ms: delayed ? delay_by || DEFAULT_DELAY_BY_MS : 0)
           rescue => exception
             warn(exception.message)
             raise e
