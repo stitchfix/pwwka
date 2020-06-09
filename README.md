@@ -148,8 +148,8 @@ Pwwka::Transmitter.send_message!(payload, routing_key, on_error: :ignore)
 
 #### Delayed Messages
 
-You might want to delay sending a message (for example, if you have just created a database
-record and a race condition keeps catching you out). In that case you can use delayed message
+You might want to delay sending a message (for example, if you have just created a database 
+record and a race condition keeps catching you out). In that case you can use delayed message 
 options:
 
 ```ruby
@@ -176,12 +176,7 @@ Pwwka.configure do |config|
 end
 ```
 
-Regardless of which processor you use, the name of the queue created is `pwwka_send_message_async`. You will need to start a worker process to work the queue. For a `Procfile` setup, with Resque as the processor, that could look something like this:
-
-```ruby
-pwwka_send_message_async_worker: rake resque:work QUEUE=pwwka_send_message_async
-```
-
+Regardless of which processor you use, the name of the queue created is `pwwka_send_message_async`.
 
 You can also configure Pwwka to use your own custom job using the `async_job_klass` configuration option. An example might be:
 ```
@@ -196,7 +191,7 @@ If you are using Resque and `Resque::Plugins::ExponentialBackoff` is available, 
 
 #### Message Queuer
 
-You can queue up messages and send them in a batch. This is most useful when multiple messages
+You can queue up messages and send them in a batch. This is most useful when multiple messages 
 need to sent from within a transaction block.
 
 For example:
@@ -260,7 +255,7 @@ Here is an example:
 
 ```ruby
 class ClientIndexMessageHandler
-
+  
   def self.handle!(delivery_info, properties, payload)
     handler.do_a_thing(payload)
   end
@@ -435,7 +430,7 @@ If you use [Resque][resque], and you wish to handle messages in a resque job, yo
 
    Note that you must provide `@queue` in your job.  `QueueResqueJobHandler` doesn't support setting a custom queue at enqueue-time (PRs welcome :).
 
-   Note that if you were using this library before version 0.12.0, your job would only be given the payload.  If you change your job to accept exatly three arguments, you will be given the payload, routing key, and message properties.  If any of those arguments are optional, you will need to set `PWWKA_QUEUE_EXTENDED_INFO` to `"true"` to force pwwka to pass those along.  Without it, your job only gets the payload to avoid breaking legacy consumers.
+   Note that if you were using this library before version 0.12.0, your job would only be given the payload.  If you change your job to accept exatly three arguments, you will be given the payload, routing key, and message properties.  If any of those arguments are optional, you will need to set `PWWKA_QUEUE_EXTENDED_INFO` to `"true"` to force pwwka to pass those along.  Without it, your job only gets the payload to avoid breaking legacy consumers. 
 
 3. Profit!
 
@@ -459,9 +454,9 @@ describe "my integration test" do
     @test_handler.test_setup
   end
 
-  after(:all) do
+  after(:all) do 
     # this clears out any messages, so you have a clean test environment next time
-    @test_handler.test_teardown
+    @test_handler.test_teardown 
   end
 
   it "uses the message bus" do
