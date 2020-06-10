@@ -98,6 +98,14 @@ module Pwwka
         resque_args = [job, payload, routing_key]
 
         unless type == nil && message_id == :auto_generate && headers == nil
+          # NOTE: (jdlubrano)
+          # Why can't we pass these options all of the time?  Well, if a user
+          # of pwwka has configured their own async_job_klass that only has an
+          # arity of 2 (i.e. payload and routing key), then passing these options
+          # as an additional argument would break the user's application.  In
+          # order to maintain compatibility with preceding versions of Pwwka,
+          # we need to ensure that the same arguments passed into this method
+          # result in compatible calls to enqueue any Resque jobs.
           resque_args << { type: type, message_id: message_id, headers: headers }
         end
 
