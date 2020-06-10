@@ -29,7 +29,7 @@ module Pwwka
       @channel_connector = ChannelConnector.new(connection_name: "p: #{Pwwka.configuration.app_id} #{Pwwka.configuration.process_name}".strip)
     end
 
-    # Send an important message that must go through.  This method allows any raised exception 
+    # Send an important message that must go through.  This method allows any raised exception
     # to pass through.
     #
     # payload:: Hash of what you'd like to include in your message
@@ -95,11 +95,16 @@ module Pwwka
       job = Pwwka.configuration.async_job_klass
 
       if background_job_processor == :resque
-        # Be perhaps too carefully making sure we queue jobs in the legacy way
-        if type == nil && message_id == :auto_generate && headers == nil
-          Resque.enqueue_in(delay_by_ms/1000, job, payload, routing_key)
+        resque_args = [job, payload, routing_key]
+
+        unless type == nil && message_id == :auto_generate && headers == nil
+          resque_args << { type: type, message_id: message_id, headers: headers }
+        end
+
+        if delay_by_ms.zero?
+          Resque.enqueue(*resque_args)
         else
-          Resque.enqueue_in(delay_by_ms/1000, job, payload, routing_key, type: type, message_id: message_id, headers: headers)
+          Resque.enqueue_in(delay_by_ms/1000, *resque_args)
         end
       elsif background_job_processor == :sidekiq
         options = { delay_by_ms: delay_by_ms, type: type, message_id: message_id, headers: headers }
