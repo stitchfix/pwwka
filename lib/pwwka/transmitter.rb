@@ -24,9 +24,16 @@ module Pwwka
     DEFAULT_DELAY_BY_MS = 5000
 
     attr_reader :channel_connector
+    attr_reader :app_manages_connector
 
-    def initialize
-      @channel_connector = ChannelConnector.new(connection_name: "p: #{Pwwka.configuration.app_id} #{Pwwka.configuration.process_name}".strip)
+    def initialize channel_connector: nil
+      if channel_connector
+        @app_manages_connector = true
+        @channel_connector = channel_connector
+      else
+        @app_manages_connector = false
+        @channel_connector = ChannelConnector.new(connection_name: "p: #{Pwwka.configuration.app_id} #{Pwwka.configuration.process_name}".strip)
+      end
     end
 
     # Send an important message that must go through.  This method allows any raised exception 
@@ -54,11 +61,12 @@ module Pwwka
                            delay_by: nil,
                            type: nil,
                            message_id: :auto_generate,
-                           headers: nil)
+                           headers: nil,
+                           channel_connector: nil)
       if delayed
-        new.send_delayed_message!(*[payload, routing_key, delay_by].compact, type: type, headers: headers, message_id: message_id)
+        new(channel_connector: channel_connector).send_delayed_message!(*[payload, routing_key, delay_by].compact, type: type, headers: headers, message_id: message_id)
       else
-        new.send_message!(payload, routing_key, type: type, headers: headers, message_id: message_id)
+        new(channel_connector: channel_connector).send_message!(payload, routing_key, type: type, headers: headers, message_id: message_id)
       end
       logf "AFTER Transmitting Message on %{routing_key} -> %{payload}",routing_key: routing_key, payload: payload
       true
@@ -134,7 +142,9 @@ module Pwwka
       logf "END Transmitting Message on id[%{id}] %{routing_key} -> %{payload}", id: publish_options.message_id, routing_key: routing_key, payload: payload
       true
     ensure
-      channel_connector.connection_close
+      unless app_manages_connector
+        channel_connector.connection_close
+      end
     end
 
 
@@ -154,7 +164,9 @@ module Pwwka
       logf "END Transmitting Delayed Message on id[%{id}] %{routing_key} -> %{payload}", id: publish_options.message_id, routing_key: routing_key, payload: payload
       true
     ensure
-      channel_connector.connection_close
+      unless app_manages_connector
+        channel_connector.connection_close
+      end
     end
 
   end
