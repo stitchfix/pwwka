@@ -29,7 +29,7 @@ module Pwwka
       @channel_connector = ChannelConnector.new(connection_name: "p: #{Pwwka.configuration.app_id} #{Pwwka.configuration.process_name}".strip)
     end
 
-    # Send an important message that must go through.  This method allows any raised exception 
+    # Send an important message that must go through.  This method allows any raised exception
     # to pass through.
     #
     # payload:: Hash of what you'd like to include in your message
@@ -95,11 +95,24 @@ module Pwwka
       job = Pwwka.configuration.async_job_klass
 
       if background_job_processor == :resque
-        # Be perhaps too carefully making sure we queue jobs in the legacy way
-        if type == nil && message_id == :auto_generate && headers == nil
-          Resque.enqueue_in(delay_by_ms/1000, job, payload, routing_key)
+        resque_args = [job, payload, routing_key]
+
+        unless type == nil && message_id == :auto_generate && headers == nil
+          # NOTE: (jdlubrano)
+          # Why can't we pass these options all of the time?  Well, if a user
+          # of pwwka has configured their own async_job_klass that only has an
+          # arity of 2 (i.e. payload and routing key), then passing these options
+          # as an additional argument would break the user's application.  In
+          # order to maintain compatibility with preceding versions of Pwwka,
+          # we need to ensure that the same arguments passed into this method
+          # result in compatible calls to enqueue any Resque jobs.
+          resque_args << { type: type, message_id: message_id, headers: headers }
+        end
+
+        if delay_by_ms.zero?
+          Resque.enqueue(*resque_args)
         else
-          Resque.enqueue_in(delay_by_ms/1000, job, payload, routing_key, type: type, message_id: message_id, headers: headers)
+          Resque.enqueue_in(delay_by_ms/1000, *resque_args)
         end
       elsif background_job_processor == :sidekiq
         options = { delay_by_ms: delay_by_ms, type: type, message_id: message_id, headers: headers }

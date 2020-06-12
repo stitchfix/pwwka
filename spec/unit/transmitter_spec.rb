@@ -312,19 +312,19 @@ describe Pwwka::Transmitter do
       end
       context "on_error: :resque" do
         it "queues a Resque job" do
-          allow(Resque).to receive(:enqueue_in)
+          allow(Resque).to receive(:enqueue)
           described_class.send_message!(payload,routing_key, on_error: :resque)
-          expect(Resque).to have_received(:enqueue_in).with(0,Pwwka::SendMessageAsyncJob,payload,routing_key)
+          expect(Resque).to have_received(:enqueue).with(Pwwka::SendMessageAsyncJob,payload,routing_key)
         end
         context "when there is a problem queueing the resque job" do
           it "raises the original exception job" do
-            allow(Resque).to receive(:enqueue_in).and_raise("NOPE")
+            allow(Resque).to receive(:enqueue).and_raise("NOPE")
             expect {
               described_class.send_message!(payload,routing_key, on_error: :resque)
             }.to raise_error(/OH NOES/)
           end
           it "logs the Resque error as a warning" do
-            allow(Resque).to receive(:enqueue_in).and_raise("NOPE")
+            allow(Resque).to receive(:enqueue).and_raise("NOPE")
             begin
               described_class.send_message!(payload,routing_key, on_error: :resque)
             rescue => ex
@@ -338,18 +338,18 @@ describe Pwwka::Transmitter do
         context "when configured background_job_processor is Resque" do
           context "when the job is queued successfully" do
             before do
-              allow(Resque).to receive(:enqueue_in)
+              allow(Resque).to receive(:enqueue)
             end
 
             it "queues a Resque job" do
               described_class.send_message!(payload, routing_key, on_error: :retry_async)
-              expect(Resque).to have_received(:enqueue_in).with(0, Pwwka::SendMessageAsyncJob, payload, routing_key)
+              expect(Resque).to have_received(:enqueue).with(Pwwka::SendMessageAsyncJob, payload, routing_key)
             end
           end
 
           context "when there is a problem queueing the Resque job" do
             before do
-              allow(Resque).to receive(:enqueue_in).and_raise("NOPE")
+              allow(Resque).to receive(:enqueue).and_raise("NOPE")
             end
 
             it "raises the original exception job" do

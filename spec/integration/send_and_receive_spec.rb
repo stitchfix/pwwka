@@ -11,6 +11,9 @@ describe "sending and receiving messages", :integration do
   include IntegrationTestHelpers
   include Resqutils::Spec::ResqueHelpers
 
+  let(:async_resque_queue) { 'pwwka_send_message_async' }
+  let(:delayed_resque_queue) { :delayed }
+
   before do
     ENV["JOB_KLASS"] = MyTestJob.name
     ENV["PWWKA_QUEUE_EXTENDED_INFO"] = "true"
@@ -30,7 +33,8 @@ describe "sending and receiving messages", :integration do
     FooReceiver.reset!
     MultiRoutingReceived.reset!
     OtherFooReceiver.reset!
-    clear_queue(:delayed)
+    clear_queue(async_resque_queue)
+    clear_queue(delayed_resque_queue)
     clear_queue(MyTestJob)
   end
 
@@ -144,7 +148,7 @@ describe "sending and receiving messages", :integration do
 
       expect(AllReceiver.messages_received.size).to eq(0)
 
-      process_resque_job(Pwwka::SendMessageAsyncJob,:delayed)
+      process_resque_job(Pwwka::SendMessageAsyncJob, async_resque_queue)
 
       allow_receivers_to_process_queues
 
@@ -166,7 +170,7 @@ describe "sending and receiving messages", :integration do
 
       expect(AllReceiver.messages_received.size).to eq(0)
 
-      process_resque_job(Pwwka::SendMessageAsyncJob,:delayed)
+      process_resque_job(Pwwka::SendMessageAsyncJob, async_resque_queue)
 
       allow_receivers_to_process_queues
 
@@ -186,12 +190,28 @@ describe "sending and receiving messages", :integration do
 
       allow(Pwwka).to receive(:configuration).and_return(configuration)
 
-      allow(Resque).to receive(:enqueue_in)
+      allow(Resque).to receive(:enqueue)
 
       Pwwka::Transmitter.send_message_async({ sample: "payload", has: { deeply: true, nested: 4 }},
                                             "pwwka.testing.bar")
 
-      expect(Resque).to have_received(:enqueue_in).with(anything, async_job_klass, anything, anything)
+      expect(Resque).to have_received(:enqueue).with(async_job_klass, anything, anything)
+    end
+
+    it "can queue a job to send a message with a delay" do
+      Pwwka::Transmitter.send_message_async({ sample: "payload" },
+                                            "pwwka.testing.bar",
+                                            delay_by_ms: 1)
+
+      allow_receivers_to_process_queues # not expecting anything to be processed
+
+      expect(AllReceiver.messages_received.size).to eq(0)
+
+      process_resque_job(Pwwka::SendMessageAsyncJob, delayed_resque_queue)
+
+      allow_receivers_to_process_queues
+
+      expect(AllReceiver.messages_received.size).to eq(1)
     end
   end
 
