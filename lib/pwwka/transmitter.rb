@@ -23,8 +23,8 @@ module Pwwka
 
     DEFAULT_DELAY_BY_MS = 5000
 
-    attr_reader :channel_connector
     attr_reader :app_manages_connector
+    attr_reader :channel_connector
 
     def initialize channel_connector: nil
       if channel_connector
@@ -62,7 +62,8 @@ module Pwwka
                            type: nil,
                            message_id: :auto_generate,
                            headers: nil,
-                           channel_connector: nil)
+                           channel_connector: nil
+                          )
       if delayed
         new(channel_connector: channel_connector).send_delayed_message!(*[payload, routing_key, delay_by].compact, type: type, headers: headers, message_id: message_id)
       else
