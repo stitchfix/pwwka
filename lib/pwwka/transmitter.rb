@@ -23,15 +23,15 @@ module Pwwka
 
     DEFAULT_DELAY_BY_MS = 5000
 
-    attr_reader :app_manages_connector
+    attr_reader :caller_manages_connector
     attr_reader :channel_connector
 
-    def initialize channel_connector: nil
+    def initialize(channel_connector: nil)
       if channel_connector
-        @app_manages_connector = true
+        @caller_manages_connector = true
         @channel_connector = channel_connector
       else
-        @app_manages_connector = false
+        @caller_manages_connector = false
         @channel_connector = ChannelConnector.new(connection_name: "p: #{Pwwka.configuration.app_id} #{Pwwka.configuration.process_name}".strip)
       end
     end
@@ -143,7 +143,7 @@ module Pwwka
       logf "END Transmitting Message on id[%{id}] %{routing_key} -> %{payload}", id: publish_options.message_id, routing_key: routing_key, payload: payload
       true
     ensure
-      unless app_manages_connector
+      unless caller_manages_connector
         channel_connector.connection_close
       end
     end
@@ -165,7 +165,7 @@ module Pwwka
       logf "END Transmitting Delayed Message on id[%{id}] %{routing_key} -> %{payload}", id: publish_options.message_id, routing_key: routing_key, payload: payload
       true
     ensure
-      unless app_manages_connector
+      unless caller_manages_connector
         channel_connector.connection_close
       end
     end
