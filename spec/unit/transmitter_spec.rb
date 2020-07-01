@@ -576,5 +576,41 @@ describe Pwwka::Transmitter do
       end
     end
   end
-end
 
+  context "application manages connection" do
+    let(:managed_connector) { instance_double(Pwwka::ChannelConnector,
+                                              topic_exchange: double(:topic_exchange).as_null_object,
+                                              delayed_exchange: double(:delayed_exchange).as_null_object
+                                             ).as_null_object }
+    describe ".send_message!" do
+
+      context "send immediate" do
+        it "doesn't open a new connection" do
+          described_class.send_message!(payload, routing_key, delayed: false, channel_connector: managed_connector)
+
+          expect(Pwwka::ChannelConnector).not_to have_received(:new)
+        end
+
+        it "doesn't close a passed in connection" do
+          described_class.send_message!(payload, routing_key, delayed: false, channel_connector: managed_connector)
+
+          expect(managed_connector).not_to have_received(:connection_close)
+        end
+      end
+
+      context "send delayed" do
+        it "doesn't open a new connection" do
+          described_class.send_message!(payload, routing_key, delayed: true, channel_connector: managed_connector)
+
+          expect(Pwwka::ChannelConnector).not_to have_received(:new)
+        end
+
+        it "doesn't close a passed in connection" do
+          described_class.send_message!(payload, routing_key, delayed: true, channel_connector: managed_connector)
+
+          expect(managed_connector).not_to have_received(:connection_close)
+        end
+      end
+    end
+  end
+end
