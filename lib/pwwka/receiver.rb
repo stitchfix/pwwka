@@ -31,7 +31,6 @@ module Pwwka
             payload = payload_parser.(payload)
             handler_klass.handle!(delivery_info, properties, payload)
             receiver.ack(delivery_info.delivery_tag)
-            logf "Processed Message on %{queue_name} -> %{payload}, %{routing_key}", queue_name: queue_name, payload: payload, routing_key: delivery_info.routing_key
           rescue => exception
             Pwwka::ErrorHandlers::Chain.new(
               Pwwka.configuration.error_handling_chain
