@@ -93,6 +93,44 @@ describe Pwwka::Logging do
           expect(logger).to have_received(:error).with("This is also the payload: [omitted]")
         end
       end
+
+      context "log_hook matching" do
+        def test_func(message, params)
+        end
+
+        before do
+          Pwwka.configuration.log_hooks = { "test message" => ->(message, params){ test_func(message, params) } }
+        end
+
+        after do
+          Pwwka.configuration.log_hooks = {}
+        end
+
+        context "message matches hook" do
+          it "overrides logging" do
+            ForLogging.logf("test message", {})
+
+            expect(logger).not_to have_received(:info)
+          end
+
+          it "calls the hook" do
+            allow(self).to receive(:test_func)
+            test_params = { param: :test }
+
+            ForLogging.logf("test message", test_params)
+
+            expect(self).to have_received(:test_func).with("test message", test_params)
+          end
+        end
+
+        context "message doesn't match hook" do
+          it "logs as normal" do
+            ForLogging.logf("other message", {})
+
+            expect(logger).to have_received(:info).with("other message")
+          end
+        end
+      end
     end
 
   end
