@@ -435,7 +435,7 @@ If you use [Resque][resque], and you wish to handle messages in a resque job, yo
 
    Note that you must provide `@queue` in your job.  `QueueResqueJobHandler` doesn't support setting a custom queue at enqueue-time (PRs welcome :).
 
-   Note that if you were using this library before version 0.12.0, your job would only be given the payload.  If you change your job to accept exatly three arguments, you will be given the payload, routing key, and message properties.  If any of those arguments are optional, you will need to set `PWWKA_QUEUE_EXTENDED_INFO` to `"true"` to force pwwka to pass those along.  Without it, your job only gets the payload to avoid breaking legacy consumers.
+   Note that if you were using this library before version 0.12.0, your job would only be given the payload.  If you change your job to accept exactly three arguments, you will be given the payload, routing key, and message properties.  If any of those arguments are optional, you will need to set `PWWKA_QUEUE_EXTENDED_INFO` to `"true"` to force pwwka to pass those along.  Without it, your job only gets the payload to avoid breaking legacy consumers.
 
 3. Profit!
 
@@ -530,6 +530,12 @@ If your payloads are large, you may not want to log them 2-3 times per message. 
 Pwwka.configuration.payload_logging = :info # The default - payloads appear at INFO and above log levels
 Pwwka.configuration.payload_logging = :error # Only log payloads for ERROR or FATAL messages
 Pwwka.configuration.payload_logging = :fatal # Only log payloads for FATAL messages
+```
+
+You can also hook into logging by passing a hash containing keys of strings to match and corresponding `Proc` objects for the logger to execute instead of logging a message. The `Proc` will be called with the original message string that was to be logged and the params specific for that log event. So, if for instance, you wanted to emit a count metric to your monitoring system instead of logging each processed message you could set the configuration:
+
+```ruby
+Pwwka.configuration.log_hooks = { 'Processed Message on' => ->(message, params){ $stats.count('message_processed') } }
 ```
 
 #### Manual monitoring

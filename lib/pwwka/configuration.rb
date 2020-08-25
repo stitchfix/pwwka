@@ -10,6 +10,7 @@ module Pwwka
     attr_accessor :delayed_exchange_name
     attr_accessor :logger
     attr_accessor :log_level
+    attr_accessor :log_hooks
     attr_accessor :options
     attr_accessor :background_job_processor
     attr_accessor :send_message_resque_backoff_strategy
@@ -26,6 +27,7 @@ module Pwwka
       @delayed_exchange_name = "pwwka.delayed.#{Pwwka.environment}"
       @logger                = MonoLogger.new(STDOUT)
       @log_level             = :info
+      @log_hooks             = {}
       @options               = {}
       @send_message_resque_backoff_strategy = [5,                  #intermittent glitch?
                                                60,                 # quick interruption

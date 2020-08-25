@@ -22,7 +22,10 @@ module Pwwka
         params[:payload] = "[omitted]" if params[:payload]
       end
       message = format % params
-      logger.send(level,message)
+
+      if Pwwka.configuration.log_hooks.select { |key, _value| message.match key }.each { |_key, value| value.call(message, params) }.empty?
+        logger.send(level,message)
+      end
     end
   end
 end
