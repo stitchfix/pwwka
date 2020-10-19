@@ -71,6 +71,33 @@ describe Pwwka::Transmitter do
           )
         end
       end
+
+      context "with just the headers overridden" do
+        it "enqueues a Resque job with the various arguments including those headers" do
+          delay_by_ms = 3_000
+          described_class.send_message_async(
+            payload,
+            routing_key,
+            headers: {
+              "custom" => "value",
+              "other_custom" => "other_value",
+            },
+          )
+
+          expect(Resque).to have_received(:enqueue_in).with(
+            delay_by_ms / 1_000,
+            Pwwka::SendMessageAsyncJob,
+            payload,
+            routing_key,
+            type: nil,
+            message_id: :auto_generate,
+            headers: {
+              "custom" => "value",
+              "other_custom" => "other_value",
+            },
+          )
+        end
+      end
     end
 
     context "when the configured background_job_processor is Sidekiq" do

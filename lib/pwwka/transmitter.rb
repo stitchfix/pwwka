@@ -106,7 +106,7 @@ module Pwwka
       if background_job_processor == :resque
         resque_args = [job, payload, routing_key]
 
-        unless type == nil && message_id == :auto_generate && headers == nil
+        unless type.nil? || message_id == :auto_generate || headers.nil?
           # NOTE: (jdlubrano)
           # Why can't we pass these options all of the time?  Well, if a user
           # of pwwka has configured their own async_job_klass that only has an
