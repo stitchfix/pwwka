@@ -77,7 +77,11 @@ describe Pwwka::Configuration do
           end
 
           def self.version
-            '5.2.0'
+            active_support_dependency = Bundler.locked_gems.dependencies.detect do |name, dep|
+              name == "activesupport"
+            end.last
+            version_specification = active_support_dependency.requirement.to_s
+            version_specification[/\d.+/]
           end
         end
         Object.const_set("Rails",rails)
