@@ -2,6 +2,7 @@ require 'spec_helper.rb'
 require 'resqutils/spec/resque_helpers'
 require 'resqutils/spec/resque_matchers'
 require 'pwwka/queue_resque_job_handler'
+require 'active_support/time'
 
 require_relative "support/integration_test_setup"
 require_relative "support/logging_receiver"
