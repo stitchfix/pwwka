@@ -48,8 +48,16 @@ module Pwwka
         # TODO: trap TERM within channel.work_pool
         info "Interrupting queue #{queue_name} subscriber safely"
       ensure
-        receiver.channel_connector.connection_close
+        # If the subscription was created in a non-blocking fashion, do not
+        # close the underlying connection before returning (or the receiver
+        # will not be usable).
+        #
+        # For more information, see here:
+        #
+        # https://github.com/stitchfix/pwwka/issues/107
+        receiver.channel_connector.connection_close if block
       end
+
       return receiver
     end
 
