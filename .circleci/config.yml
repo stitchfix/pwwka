@@ -245,7 +245,7 @@ workflows:
         filters:
           branches:
             only:
-            - master
+            - main
     jobs:
     - ruby-3.0.0-rails-6.1:
         context: org-global
