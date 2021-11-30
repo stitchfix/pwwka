@@ -1,18 +1,18 @@
-# DO NOT MODIFY - this is managed by Git Reduce in goro
+# DO NOT MODIFY - this is managed by Git Reduce in goro and generated from build-matrix.json
 #
 ---
 version: 2
 jobs:
   generate-and-push-docs:
     docker:
-    - image: circleci/ruby:3.0.0
+    - image: cimg/ruby:3.0.3
       auth:
         username: "$DOCKERHUB_USERNAME"
         password: "$DOCKERHUB_PASSWORD"
     steps:
     - checkout
     - run: bundle config stitchfix01.jfrog.io $ARTIFACTORY_USER:$ARTIFACTORY_TOKEN
-    - run: bundle install --full-index
+    - run: bundle install
     - run:
         name: Generate documentation
         command: ' if [[ $(bundle exec rake -T docs:generate:custom) ]]; then echo
@@ -26,14 +26,14 @@ jobs:
           docs:push; fi
   release:
     docker:
-    - image: circleci/ruby:3.0.0
+    - image: cimg/ruby:3.0.3
       auth:
         username: "$DOCKERHUB_USERNAME"
         password: "$DOCKERHUB_PASSWORD"
     steps:
     - checkout
     - run: bundle config stitchfix01.jfrog.io $ARTIFACTORY_USER:$ARTIFACTORY_TOKEN
-    - run: bundle install --full-index
+    - run: bundle install
     - run:
         name: Artifactory login
         command: mkdir -p ~/.gem && curl -u$ARTIFACTORY_USER:$ARTIFACTORY_TOKEN https://stitchfix01.jfrog.io/stitchfix01/api/gems/eng-gems/api/v1/api_key.yaml
@@ -41,9 +41,9 @@ jobs:
     - run:
         name: Build/release gem to artifactory
         command: bundle exec rake push_artifactory
-  ruby-3.0.0-rails-6.1:
+  ruby-3.0.3-rails-6.1:
     docker:
-    - image: circleci/ruby:3.0.0
+    - image: cimg/ruby:3.0.3
       auth:
         username: "$DOCKERHUB_USERNAME"
         password: "$DOCKERHUB_PASSWORD"
@@ -63,10 +63,10 @@ jobs:
     - run:
         name: Check for Gemfile.lock presence
         command: ' if (test -f Gemfile.lock) then echo "Dont commit Gemfile.lock (see
-          https://github.com/stitchfix/eng-wiki/blob/master/architecture-decisions/0009-rubygem-dependencies-will-be-managed-more-explicitly.md)"
+          https://github.com/stitchfix/eng-wiki/blob/main/architecture-decisions/0009-rubygem-dependencies-will-be-managed-more-explicitly.md)"
           1>&2 ; exit 1 ; else exit 0 ; fi '
     - run: bundle config stitchfix01.jfrog.io $ARTIFACTORY_USER:$ARTIFACTORY_TOKEN
-    - run: bundle install --full-index
+    - run: bundle install
     - run: bundle exec rspec --format RspecJunitFormatter --out /tmp/test-results/rspec.xml
         --format=doc
     - run:
@@ -79,9 +79,9 @@ jobs:
         when: on_fail
     - store_test_results:
         path: "/tmp/test-results"
-  ruby-2.7.2-rails-6.1:
+  ruby-2.7.5-rails-6.1:
     docker:
-    - image: circleci/ruby:2.7.2
+    - image: cimg/ruby:2.7.5
       auth:
         username: "$DOCKERHUB_USERNAME"
         password: "$DOCKERHUB_PASSWORD"
@@ -101,10 +101,10 @@ jobs:
     - run:
         name: Check for Gemfile.lock presence
         command: ' if (test -f Gemfile.lock) then echo "Dont commit Gemfile.lock (see
-          https://github.com/stitchfix/eng-wiki/blob/master/architecture-decisions/0009-rubygem-dependencies-will-be-managed-more-explicitly.md)"
+          https://github.com/stitchfix/eng-wiki/blob/main/architecture-decisions/0009-rubygem-dependencies-will-be-managed-more-explicitly.md)"
           1>&2 ; exit 1 ; else exit 0 ; fi '
     - run: bundle config stitchfix01.jfrog.io $ARTIFACTORY_USER:$ARTIFACTORY_TOKEN
-    - run: bundle install --full-index
+    - run: bundle install
     - run: bundle exec rspec --format RspecJunitFormatter --out /tmp/test-results/rspec.xml
         --format=doc
     - run:
@@ -117,9 +117,9 @@ jobs:
         when: on_fail
     - store_test_results:
         path: "/tmp/test-results"
-  ruby-3.0.0-rails-6.0:
+  ruby-3.0.3-rails-6.0:
     docker:
-    - image: circleci/ruby:3.0.0
+    - image: cimg/ruby:3.0.3
       auth:
         username: "$DOCKERHUB_USERNAME"
         password: "$DOCKERHUB_PASSWORD"
@@ -139,10 +139,10 @@ jobs:
     - run:
         name: Check for Gemfile.lock presence
         command: ' if (test -f Gemfile.lock) then echo "Dont commit Gemfile.lock (see
-          https://github.com/stitchfix/eng-wiki/blob/master/architecture-decisions/0009-rubygem-dependencies-will-be-managed-more-explicitly.md)"
+          https://github.com/stitchfix/eng-wiki/blob/main/architecture-decisions/0009-rubygem-dependencies-will-be-managed-more-explicitly.md)"
           1>&2 ; exit 1 ; else exit 0 ; fi '
     - run: bundle config stitchfix01.jfrog.io $ARTIFACTORY_USER:$ARTIFACTORY_TOKEN
-    - run: bundle install --full-index
+    - run: bundle install
     - run: bundle exec rspec --format RspecJunitFormatter --out /tmp/test-results/rspec.xml
         --format=doc
     - run:
@@ -155,9 +155,9 @@ jobs:
         when: on_fail
     - store_test_results:
         path: "/tmp/test-results"
-  ruby-2.7.2-rails-6.0:
+  ruby-2.7.5-rails-6.0:
     docker:
-    - image: circleci/ruby:2.7.2
+    - image: cimg/ruby:2.7.5
       auth:
         username: "$DOCKERHUB_USERNAME"
         password: "$DOCKERHUB_PASSWORD"
@@ -177,10 +177,10 @@ jobs:
     - run:
         name: Check for Gemfile.lock presence
         command: ' if (test -f Gemfile.lock) then echo "Dont commit Gemfile.lock (see
-          https://github.com/stitchfix/eng-wiki/blob/master/architecture-decisions/0009-rubygem-dependencies-will-be-managed-more-explicitly.md)"
+          https://github.com/stitchfix/eng-wiki/blob/main/architecture-decisions/0009-rubygem-dependencies-will-be-managed-more-explicitly.md)"
           1>&2 ; exit 1 ; else exit 0 ; fi '
     - run: bundle config stitchfix01.jfrog.io $ARTIFACTORY_USER:$ARTIFACTORY_TOKEN
-    - run: bundle install --full-index
+    - run: bundle install
     - run: bundle exec rspec --format RspecJunitFormatter --out /tmp/test-results/rspec.xml
         --format=doc
     - run:
@@ -200,10 +200,10 @@ workflows:
     - release:
         context: org-global
         requires:
-        - ruby-3.0.0-rails-6.1
-        - ruby-2.7.2-rails-6.1
-        - ruby-3.0.0-rails-6.0
-        - ruby-2.7.2-rails-6.0
+        - ruby-3.0.3-rails-6.1
+        - ruby-2.7.5-rails-6.1
+        - ruby-3.0.3-rails-6.0
+        - ruby-2.7.5-rails-6.0
         filters:
           tags:
             only: /^[0-9]+\.[0-9]+\.[0-9]+(\.?(RC|rc)[-\.]?\w*)?$/
@@ -218,22 +218,22 @@ workflows:
             only: /^[0-9]+\.[0-9]+\.[0-9]+(\.?(RC|rc)[-\.]?\w*)?$/
           branches:
             ignore: /.*/
-    - ruby-3.0.0-rails-6.1:
+    - ruby-3.0.3-rails-6.1:
         context: org-global
         filters:
           tags:
             only: &1 /.*/
-    - ruby-2.7.2-rails-6.1:
+    - ruby-2.7.5-rails-6.1:
         context: org-global
         filters:
           tags:
             only: *1
-    - ruby-3.0.0-rails-6.0:
+    - ruby-3.0.3-rails-6.0:
         context: org-global
         filters:
           tags:
             only: *1
-    - ruby-2.7.2-rails-6.0:
+    - ruby-2.7.5-rails-6.0:
         context: org-global
         filters:
           tags:
@@ -247,11 +247,11 @@ workflows:
             only:
             - main
     jobs:
-    - ruby-3.0.0-rails-6.1:
+    - ruby-3.0.3-rails-6.1:
         context: org-global
-    - ruby-2.7.2-rails-6.1:
+    - ruby-2.7.5-rails-6.1:
         context: org-global
-    - ruby-3.0.0-rails-6.0:
+    - ruby-3.0.3-rails-6.0:
         context: org-global
-    - ruby-2.7.2-rails-6.0:
+    - ruby-2.7.5-rails-6.0:
         context: org-global
