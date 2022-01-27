@@ -1,4 +1,4 @@
 module Pwwka
-  VERSION = '0.24.1'
+  VERSION = '1.0.0'
 end
 
