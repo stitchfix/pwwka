@@ -202,7 +202,7 @@ describe "sending and receiving messages", :integration do
     it "can queue a job to send a message with a delay" do
       Pwwka::Transmitter.send_message_async({ sample: "payload" },
                                             "pwwka.testing.bar",
-                                            delay_by_ms: 1)
+                                            delay_by_ms: 1_000)
 
       allow_receivers_to_process_queues # not expecting anything to be processed
 
