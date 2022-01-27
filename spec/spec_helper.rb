@@ -11,7 +11,12 @@ end
 
 require 'pwwka'
 require 'pwwka/test_handler'
-require 'active_support/core_ext/hash'
+begin
+  require 'active_support/core_ext/hash'
+rescue NameError
+  require "active_support/isolated_execution_state"
+  require 'active_support/core_ext/hash'
+end
 
 # These are required in pwwka proper, but they are guarded to not cause
 # an error if missing.  Requiring here so their absence will fail the tests
@@ -26,7 +31,7 @@ test_configuration = TestConfiguration.new(File.join(GEM_ROOT,"docker-compose.ym
 RSpec.configure do |config|
 
   config.expect_with :rspec do |c|
-    c.syntax = [:should,:expect] # should is needed to make a resque helper 
+    c.syntax = [:should,:expect] # should is needed to make a resque helper
                                  # from resqutils work
   end
 
