@@ -11,6 +11,7 @@ end
 
 require 'pwwka'
 require 'pwwka/test_handler'
+require "active_support/isolated_execution_state"
 require 'active_support/core_ext/hash'
 
 # These are required in pwwka proper, but they are guarded to not cause
