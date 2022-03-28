@@ -1,6 +1,6 @@
 module Pwwka
   # Queue messages for sending in a batch
-  # Primarily used when multiple messages need to sent from within a 
+  # Primarily used when multiple messages need to sent from within a
   # transaction block
   #
   # Example:
@@ -49,7 +49,9 @@ module Pwwka
 
     def send_messages!
       message_queue.each do |message|
-        send_message!(*message_arguments(message))
+        payload, routing_key, options = *message_arguments(message)
+        options ||= {}
+        send_message!(payload, routing_key, **options)
       end
       clear_messages
     end
